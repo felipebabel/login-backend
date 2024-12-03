@@ -25,7 +25,7 @@ public class MajorsControllers implements MajorsApi {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Major> getMajorById(@PathVariable final Long identifier) {
+    public ResponseEntity<Major> getMajorById(@PathVariable("id") final Long identifier) {
         Major major = this.majorService.getMajor(identifier);
         if (Objects.nonNull(major)) {
             return ResponseEntity.ok(major);
