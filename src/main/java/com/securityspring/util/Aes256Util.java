@@ -35,6 +35,7 @@ public class Aes256Util {
 
     public static final String DECRYPT_FAILED = "Decrypt failed";
 
+    public static final String CIPHER_INSTANCE = "AES/CBC/PKCS5Padding";
 
 
     public static String encrypt(final String strToEncrypt,
@@ -50,7 +51,7 @@ public class Aes256Util {
 
             final SecretKeySpec secretKeySpec = getSecretKeySpec(secretKey, salt);
 
-            final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            final Cipher cipher = Cipher.getInstance(CIPHER_INSTANCE);
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivspec);
 
             final byte[] cipherText = cipher.doFinal(strToEncrypt.getBytes(StandardCharsets.UTF_8));
@@ -68,8 +69,8 @@ public class Aes256Util {
 
     public static String decrypt(final String strToDecrypt,
                                  final String secretKey,
-                                 final String salt)
-            throws Exception {
+                                 final String salt) throws BadRequestException
+              {
         LOGGER.info("Decrypting password");
         try {
             final byte[] encryptedData = Base64.getDecoder().decode(strToDecrypt);
@@ -81,7 +82,7 @@ public class Aes256Util {
             final SecretKeySpec secretKeySpec = getSecretKeySpec(secretKey, salt);
             final IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-            final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            final Cipher cipher = Cipher.getInstance(CIPHER_INSTANCE);
             cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivspec);
 
             final byte[] cipherText = new byte[encryptedData.length - 16];

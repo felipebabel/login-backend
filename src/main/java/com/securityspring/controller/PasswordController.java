@@ -27,9 +27,10 @@ public class PasswordController implements PasswordApi{
 
     @Override
     @PostMapping("/encrypt")
-    public ResponseEntity<DefaultResponse> encryptPassword(@RequestParam("password") final String password) throws BadRequestException {
+    public ResponseEntity<DefaultResponse> encryptPassword(@RequestParam("user") final String user,
+                                                           @RequestParam("password") final String password) throws BadRequestException {
         LOGGER.info("Encrypting password");
-        final String passwordEncrypted = this.passwordService.encryptPassword(password);
+        final String passwordEncrypted = this.passwordService.encryptPassword(password, user);
         LOGGER.info("Password Encrypted successfully");
         return new ResponseEntity<>(DefaultResponse.builder().message("Password encrypted: " + passwordEncrypted)
                 .build(), HttpStatus.OK);
@@ -37,9 +38,10 @@ public class PasswordController implements PasswordApi{
 
     @Override
     @PostMapping("/decrypt")
-    public ResponseEntity<DefaultResponse> decryptPassword(@RequestParam("password") final String password) throws Exception {
+    public ResponseEntity<DefaultResponse> decryptPassword(@RequestParam("user") final String user,
+                                                           @RequestParam("password-encrypted") final String password) throws BadRequestException {
         LOGGER.info("Decrypting password");
-        final String passwordDecrypted = this.passwordService.decryptPassword(password);
+        final String passwordDecrypted = this.passwordService.decryptPassword(password, user);
         LOGGER.info("Password Decrypted successfully");
         return ResponseEntity.ok(DefaultResponse.builder().message("Password decrypted: " + passwordDecrypted).build());
     }

@@ -19,12 +19,12 @@ public class PasswordService {
         this.projectProperties = projectProperties;
     }
 
-    public String encryptPassword(final String password) throws BadRequestException {
-        return Aes256Util.encrypt(password, this.getSecretKey(), String.valueOf(1L));
+    public String encryptPassword(final String password, final String user) throws BadRequestException {
+        return Aes256Util.encrypt(password, this.getSecretKey(), user);
     }
 
-    public String decryptPassword(final String password) throws Exception {
-        return Aes256Util.decrypt(password, this.getSecretKey(), String.valueOf(1L));
+    public String decryptPassword(final String password, final String user) throws BadRequestException {
+        return Aes256Util.decrypt(password, this.getSecretKey(), user);
     }
 
     private String getSecretKey() {

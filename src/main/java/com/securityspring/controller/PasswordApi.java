@@ -20,7 +20,8 @@ public interface PasswordApi {
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
     @PostMapping("/encrypt")
-    public ResponseEntity<DefaultResponse> encryptPassword(final String password) throws BadRequestException;
+    public ResponseEntity<DefaultResponse> encryptPassword(final String user,
+                                                           final String password) throws BadRequestException;
 
     @Operation(summary = "Decrypt a password", description = "Decrypts the provided password and returns the original string.")
     @ApiResponses(value = {
@@ -29,6 +30,7 @@ public interface PasswordApi {
             @ApiResponse(responseCode = "400", description = "Invalid request")
     })
     @PostMapping("/decrypt")
-    public ResponseEntity<DefaultResponse> decryptPassword(final String password) throws Exception;
+    public ResponseEntity<DefaultResponse> decryptPassword(final String user,
+                                                           final String password) throws Exception;
 
 }
