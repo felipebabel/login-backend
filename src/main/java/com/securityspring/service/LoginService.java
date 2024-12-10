@@ -42,6 +42,11 @@ public class LoginService {
         return this.userRepository.findUser(user);
     }
 
+    public void updatePassword(final String password, final User user)  {
+        user.setPassword(password);
+        this.userRepository.save(user);
+    }
+
     public String decryptPassword(final String password, final String user) throws BadRequestException {
         return Aes256Util.decrypt(password, this.getSecretKey(), user);
     }

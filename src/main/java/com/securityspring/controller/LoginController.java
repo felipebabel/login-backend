@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -75,5 +72,24 @@ public class LoginController implements LoginApi{
         LOGGER.info("Account created successfully");
         return new ResponseEntity<>(DefaultResponse.builder().message("Account created successfully")
                 .build(), HttpStatus.OK);
+    }
+
+    @Override
+    @PutMapping("/forgot-password")
+    public ResponseEntity<DefaultResponse> forgotPassword(@RequestParam("user") final String user,
+                                                         @RequestParam("password") final String password) throws BadRequestException {
+        LOGGER.info("Updating password");
+        final Optional<User> optionalUser = this.loginService.findUser(user);
+        if (optionalUser.isPresent()) {
+            LOGGER.info("User found. User: {}", user);
+            final String encryptedPassword = this.passwordService.encryptPassword(password, user);
+            this.loginService.updatePassword(encryptedPassword, optionalUser.get());
+            LOGGER.info("Password updated successfully");
+            return new ResponseEntity<>(DefaultResponse.builder().message("Password updated successfully")
+                    .build(), HttpStatus.OK);
+        }
+        LOGGER.info("User not found. User {}", user);
+        return new ResponseEntity<>(DefaultResponse.builder().message("User not found: " + user).status(ERROR)
+                .build(), NOT_FOUND);
     }
 }
