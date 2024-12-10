@@ -28,7 +28,7 @@ public interface LoginApi {
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Account created successfully",
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-                @ApiResponse(responseCode = "400", description = "Invalid request")
+                @ApiResponse(responseCode = "400", description = "User already exists")
         })
         @PostMapping("/create-account")
         ResponseEntity<DefaultResponse> createAccount(@RequestParam("user") final String user,

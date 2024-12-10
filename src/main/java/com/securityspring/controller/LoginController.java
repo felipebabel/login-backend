@@ -45,7 +45,7 @@ public class LoginController implements LoginApi{
         if (optionalUser.isPresent()) {
             final String decryptedPassword = this.passwordService.decryptPassword(optionalUser.get().getPassword(), user);
             if (password.equals(decryptedPassword)) {
-                return new ResponseEntity<>(DefaultResponse.builder().message(SUCCESS)
+                return new ResponseEntity<>(DefaultResponse.builder().message("Login successful")
                         .build(), HttpStatus.OK);
             } else {
                 LOGGER.info(LOGIN_FAILED);
@@ -66,13 +66,14 @@ public class LoginController implements LoginApi{
         final Optional<User> optionalUser = this.loginService.findUser(user);
         if (optionalUser.isPresent()) {
             LOGGER.info("Account creation failed");
-            return new ResponseEntity<>(DefaultResponse.builder().message("User already created. User: " + optionalUser.get().getUsername())
+            return new ResponseEntity<>(DefaultResponse.builder().message("User already exists. User: " + optionalUser.get().getUsername())
             .status(ERROR)
                     .build(), HttpStatus.BAD_REQUEST);
         }
         final String encryptedPassword = this.passwordService.encryptPassword(password, user);
         this.loginService.saveUser(encryptedPassword, user);
-        return new ResponseEntity<>(DefaultResponse.builder().message(SUCCESS)
+        LOGGER.info("Account created successfully");
+        return new ResponseEntity<>(DefaultResponse.builder().message("Account created successfully")
                 .build(), HttpStatus.OK);
     }
 }
