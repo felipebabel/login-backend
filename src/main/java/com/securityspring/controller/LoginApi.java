@@ -32,6 +32,6 @@ public interface LoginApi {
         })
         @PostMapping("/create-account")
         ResponseEntity<DefaultResponse> createAccount(@RequestParam("user") final String user,
-                                                      @RequestParam("password-encrypted") final String password) throws BadRequestException;
+                                                      @RequestParam("password") final String password) throws BadRequestException;
 
 }

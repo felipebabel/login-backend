@@ -61,7 +61,18 @@ public class LoginController implements LoginApi{
     @Override
     @PostMapping("/create-account")
     public ResponseEntity<DefaultResponse> createAccount(@RequestParam("user") final String user,
-                                                           @RequestParam("password-encrypted") final String password) throws BadRequestException {
-        return ResponseEntity.ok(DefaultResponse.builder().build());
+                                                           @RequestParam("password") final String password) throws BadRequestException {
+        LOGGER.info("Creating account");
+        final Optional<User> optionalUser = this.loginService.findUser(user);
+        if (optionalUser.isPresent()) {
+            LOGGER.info("Account creation failed");
+            return new ResponseEntity<>(DefaultResponse.builder().message("User already created. User: " + optionalUser.get().getUsername())
+            .status(ERROR)
+                    .build(), HttpStatus.BAD_REQUEST);
+        }
+        final String encryptedPassword = this.passwordService.encryptPassword(password, user);
+        this.loginService.saveUser(encryptedPassword, user);
+        return new ResponseEntity<>(DefaultResponse.builder().message(SUCCESS)
+                .build(), HttpStatus.OK);
     }
 }
