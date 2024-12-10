@@ -27,6 +27,7 @@ public class UserAdmin implements CommandLineRunner {
         LOGGER.info("Creating user admin.");
             User adminUser = new User();
             adminUser.setUsername(ADMIN);
+            adminUser.setFirstName(ADMIN);
             adminUser.setPassword(this.passwordService.encryptPassword(ADMIN, ADMIN));
             userRepository.save(adminUser);
             LOGGER.info("User admin created.");

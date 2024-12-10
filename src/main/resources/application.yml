@@ -1,2 +1,7 @@
+server:
+  port: 8081
 security-project:
   secret-key: ${SECRET_KEY}
+email-service:
+  url: ${EMAIL_SERVICE_URL}
+  from: ${EMAIL_FROM}

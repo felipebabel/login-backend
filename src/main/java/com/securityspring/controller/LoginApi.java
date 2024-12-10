@@ -33,7 +33,9 @@ public interface LoginApi {
         })
         @PostMapping("/create-account")
         ResponseEntity<DefaultResponse> createAccount(@RequestParam("user") final String user,
-                                                      @RequestParam("password") final String password) throws BadRequestException;
+                                                      @RequestParam("password") final String password,
+                                                      @RequestParam("email") final String email,
+                                                      @RequestParam("first-name") final String name) throws BadRequestException;
 
         @Operation(summary = "Updated password", description = "Allows updating the password for an existing user.")
         @ApiResponses(value = {
@@ -44,5 +46,7 @@ public interface LoginApi {
         @PutMapping("/forgot-password")
         ResponseEntity<DefaultResponse> forgotPassword(@RequestParam("user") final String user,
                                                       @RequestParam("password") final String password) throws BadRequestException;
+
+        ResponseEntity<DefaultResponse> requestPasswordReset(@RequestParam("user") final String user);
 
 }
