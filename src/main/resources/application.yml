@@ -7,3 +7,5 @@ email-service:
   from: ${EMAIL_FROM}
 front-end:
   url: ${FRONT_END_URL}
+  secret-key-token: ${SECRET_KEY_TOKEN}
+  max-seconds-token: ${MAX_SECONDS_TOKEN}

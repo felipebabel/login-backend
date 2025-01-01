@@ -3,8 +3,10 @@
     <envs>
       <env name="EMAIL_FROM" value="babelfelipe@gmail.com" />
       <env name="EMAIL_SERVICE_URL" value="localhost:8080" />
-      <env name="SECRET_KEY" value="S" />
       <env name="FRONT_END_URL" value="http://127.0.0.1:5501" />
+      <env name="SECRET_KEY" value="S" />
+      <env name="SECRET_KEY_TOKEN" value="mySecretKeyForTesting_1234567890abcdef" />
+      <env name="MAX_SECONDS_TOKEN" value="30" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.securityspring.SecuritySpringApplication" />
     <module name="security-spring" />
