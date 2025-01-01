@@ -35,6 +35,7 @@ public class LoginController implements LoginApi{
 
     @Override
     @PostMapping()
+    @CrossOrigin(origins = "${FRONT_END_URL}")
     public ResponseEntity<DefaultResponse> login(@RequestParam("user") final String user,
                                                  @RequestParam("password") final String password) throws BadRequestException {
         LOGGER.info("Starting login");

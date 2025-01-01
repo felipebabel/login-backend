@@ -5,3 +5,5 @@ security-project:
 email-service:
   url: ${EMAIL_SERVICE_URL}
   from: ${EMAIL_FROM}
+front-end:
+  url: ${FRONT_END_URL}

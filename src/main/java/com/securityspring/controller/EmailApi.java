@@ -17,6 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "sendEmail", url = "${EMAIL_SERVICE_URL}")
 public interface EmailApi {
 
-        @PostMapping("/api/email")
+        @PostMapping("/api/v1/email")
         void sendEmail(@RequestBody EmailDto emailDto);
 }
