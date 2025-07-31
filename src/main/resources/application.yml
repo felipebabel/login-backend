@@ -9,3 +9,8 @@ front-end:
   url: ${FRONT_END_URL}
   secret-key-token: ${SECRET_KEY_TOKEN}
   max-seconds-token: ${MAX_SECONDS_TOKEN}
+swagger:
+  api:
+    title: Login backend
+    Description: This backend handles user login, registration, and token management. It securely encrypts user passwords using AES-256 encryption and ensures secure authentication and authorization through token-based mechanisms.
+
