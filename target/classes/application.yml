@@ -1,16 +1,39 @@
 server:
-  port: 8081
+  port: 8080
+
+spring:
+  application:
+    name: security-spring
+  security:
+    user:
+      name: your-username
+      password: your-password
+  datasource:
+    url: jdbc:postgresql://localhost:5432/login-project
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
 security-project:
   secret-key: ${SECRET_KEY}
+
 email-service:
   url: ${EMAIL_SERVICE_URL}
   from: ${EMAIL_FROM}
+
 front-end:
   url: ${FRONT_END_URL}
   secret-key-token: ${SECRET_KEY_TOKEN}
   max-seconds-token: ${MAX_SECONDS_TOKEN}
+
 swagger:
   api:
     title: Login backend
-    Description: This backend handles user login, registration, and token management. It securely encrypts user passwords using AES-256 encryption and ensures secure authentication and authorization through token-based mechanisms.
-
+    description: This backend handles user login, registration, and token management. It securely encrypts user passwords using AES-256 encryption and ensures secure authentication and authorization through token-based mechanisms.
