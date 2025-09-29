@@ -2,11 +2,11 @@
   <configuration default="false" name="SecuritySpringApplication" type="Application" factoryName="Application" nameIsGenerated="true">
     <envs>
       <env name="EMAIL_FROM" value="babelfelipe@gmail.com" />
-      <env name="EMAIL_SERVICE_URL" value="localhost:8080" />
-      <env name="FRONT_END_URL" value="http://127.0.0.1:5501" />
+      <env name="EMAIL_SERVICE_URL" value="localhost:8081" />
+      <env name="FRONT_END_URL" value="localhost:5173" />
+      <env name="MAX_SECONDS_TOKEN" value="30" />
       <env name="SECRET_KEY" value="S" />
       <env name="SECRET_KEY_TOKEN" value="mySecretKeyForTesting_1234567890abcdef" />
-      <env name="MAX_SECONDS_TOKEN" value="30" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.securityspring.SecuritySpringApplication" />
     <module name="security-spring" />

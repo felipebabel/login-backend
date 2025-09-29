@@ -1,0 +1,484 @@
+package com.securityspring.application.service.impl;
+
+import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import jakarta.mail.MessagingException;
+import lombok.Getter;
+import com.securityspring.application.service.api.EmailServiceApi;
+import com.securityspring.application.service.api.LogServiceApi;
+import com.securityspring.application.service.api.LoginServiceApi;
+import com.securityspring.application.service.api.PasswordServiceApi;
+import com.securityspring.domain.enums.RolesUserEnum;
+import com.securityspring.domain.enums.StatusEnum;
+import com.securityspring.domain.exception.InvalidPasswordException;
+import com.securityspring.domain.exception.UserAlreadyExistsException;
+import com.securityspring.domain.exception.UserBlockedException;
+import com.securityspring.domain.exception.UserInactiveException;
+import com.securityspring.domain.exception.UserNotFoundException;
+import com.securityspring.domain.exception.UserPendingException;
+import com.securityspring.domain.model.UserEntity;
+import com.securityspring.domain.port.UserRepository;
+import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
+import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
+import com.securityspring.infrastructure.adapters.dto.TotalAccountProjection;
+import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
+import com.securityspring.infrastructure.config.ProjectProperties;
+import com.securityspring.infrastructure.config.TokenJwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.JpaSort;
+import org.springframework.stereotype.Service;
+
+
+@Service
+@Scope("prototype")
+public class LoginServiceImpl implements LoginServiceApi {
+
+    public static final String ADMIN = "admin";
+    public static final String USER = "user";
+    public static final String ANALYST = "ANALYST";
+
+    @Getter
+    private final ProjectProperties projectProperties;
+
+    private final PasswordServiceApi passwordService;
+
+    private final UserRepository userRepository;
+
+    private final LogServiceApi logService;
+
+    private final EmailServiceApi emailService;
+
+    private final TokenJwtUtil tokenJwtUtil;
+
+    static final Logger LOGGER = LoggerFactory.getLogger(LoginServiceImpl.class);
+
+
+    public LoginServiceImpl(final ProjectProperties projectProperties,
+                            final PasswordServiceApi passwordService,
+                            final UserRepository userRepository,
+                            final LogServiceApi logService,
+                            final EmailServiceApi emailService,
+                            final TokenJwtUtil tokenJwtUtil) {
+        this.projectProperties = projectProperties;
+        this.passwordService = passwordService;
+        this.userRepository = userRepository;
+        this.logService = logService;
+        this.emailService = emailService;
+        this.tokenJwtUtil = tokenJwtUtil;
+    }
+
+    @Override
+    public UserEntity saveUser(final String password,
+                               final String user,
+                               final String email,
+                               final String firstName,
+                               final StatusEnum statusEnum,
+                               final RolesUserEnum role) {
+        final UserEntity userEntity = new UserEntity();
+        userEntity.setUsername(user);
+        userEntity.setPassword(password);
+        userEntity.setName(firstName);
+        userEntity.setEmail(email);
+        userEntity.setStatus(statusEnum);
+        userEntity.setLastAccessDate(LocalDateTime.now());
+        userEntity.setCreationUserDate(LocalDateTime.now());
+        userEntity.setLoginAttempt(0);
+        userEntity.setRole(role);
+        this.userRepository.save(userEntity);
+        LOGGER.info("User saved: Id: {}", userEntity.getIdentifier());
+        return userEntity;
+    }
+    @Override
+    public UserEntity inactiveAccount(final Long user) {
+        final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
+        if (userEntity.isPresent()) {
+            userEntity.get().setStatus(StatusEnum.INACTIVE);
+            this.userRepository.save(userEntity.get());
+            LOGGER.info("User inactivated: Id: {}", userEntity.get().getIdentifier());
+            this.logService.setLog("INACTIVATE ACCOUNT", user);
+            return userEntity.get();
+        } else {
+            throw new UserNotFoundException("User not found to inactive: " + user);
+        }
+    }
+
+    @Override
+    public UserEntity forcePasswordChange(final Long user) {
+        final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
+        if (userEntity.isPresent()) {
+            userEntity.get().setForcePasswordChange(true);
+            this.userRepository.save(userEntity.get());
+            LOGGER.info("User forced to change password: Id: {}", user);
+            this.logService.setLog("FORCED CHANGE PASSWORD", user, "User forced to change password.");
+            return userEntity.get();
+        } else {
+            throw new UserNotFoundException("User not found to force change password: " + user);
+        }
+    }
+
+    @Override
+    public UserEntity getUserByUsername(final String username) {
+        final Optional<UserEntity> userEntity = this.userRepository.findByUsername(username);
+        if (userEntity.isPresent()) {
+            return userEntity.get();
+        } else {
+            throw new UserNotFoundException("User not found. Username: " + username);
+        }
+    }
+
+    @Override
+    public UserEntity getUserByName(final String name) {
+        final Optional<UserEntity> userEntity = this.userRepository.findByUsername(name);
+        if (userEntity.isPresent()) {
+            return userEntity.get();
+        } else {
+            throw new UserNotFoundException("User not found. Name: " + name);
+        }
+    }
+
+    @Override
+    public Optional<UserEntity> findUser(final String user) {
+        return this.userRepository.findByUsername(user.trim());
+    }
+
+    @Override
+    public UserEntity login(final LoginRequestDto loginRequestDto) {
+        String username = loginRequestDto.getUser().trim();
+        UserEntity user = findUser(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
+
+        switch (user.getStatus()) {
+            case PENDING -> {
+                logService.setLog(
+                        "LOGIN ATTEMPT",
+                        user.getIdentifier(),
+                        String.format("Login attempt with status PENDING for user: %s", username)
+                );
+                throw new UserPendingException("Your account is pending to active.");
+            }
+            case BLOCKED -> {
+                logService.setLog(
+                        "LOGIN ATTEMPT",
+                        user.getIdentifier(),
+                        String.format("Login attempt with status BLOCKED for user: %s", username)
+                );
+                throw new UserBlockedException("Your account is blocked.");
+            }
+            case INACTIVE -> {
+                logService.setLog(
+                        "LOGIN ATTEMPT",
+                        user.getIdentifier(),
+                        String.format("Login attempt with status INACTIVE for user: %s", username)
+                );
+                throw new UserInactiveException("Your account is inactive.");
+            }
+        }
+
+        if (!passwordService.checkPassword(loginRequestDto.getPassword(), user.getPassword())) {
+            handleInvalidPassword(user);
+        }
+
+        updateLoginAttempt(user, 0);
+        updateLogin(user, 0);
+        this.logService.setLog("LOGIN ACCOUNT", user.getIdentifier());
+        return user;
+    }
+
+
+    private void handleInvalidPassword(UserEntity user) {
+        int attempts = user.getLoginAttempt() + 1;
+        if (attempts >= 5) {
+            blockUser(user.getIdentifier());
+            throw new InvalidPasswordException("User blocked due to too many failed login attempts");
+        }
+        updateLoginAttempt(user, attempts);
+        throw new InvalidPasswordException("Invalid password");
+    }
+
+    @Override
+    public void createAccount(final CreateAccountRequestDto createAccount) throws MessagingException, UnsupportedEncodingException {
+        final Optional<UserEntity> optionalUser = this.findUser(createAccount.getUser());
+        if (optionalUser.isPresent()) {
+            throw new UserAlreadyExistsException("User already exists: User" + optionalUser.get().getUsername());
+        }
+        final String encryptedPassword = this.passwordService.encryptPassword(createAccount.getPassword());
+        final UserEntity user = this.saveUser(encryptedPassword, createAccount.getUser(), createAccount.getEmail(),
+                createAccount.getName(), StatusEnum.PENDING, RolesUserEnum.USER);
+        this.logService.setLog("CREATED ACCOUNT", user.getIdentifier());
+        this.emailService.sendEmail(user);
+        LOGGER.info("Account created successfully");
+    }
+
+
+    @Override
+    public void logout(final Long user) {
+        final Optional<UserEntity> optionalUser = this.userRepository.findByIdentifier(user);
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException("User not found: User" + user);
+        }
+        optionalUser.get().setLoginDate(null);
+        this.userRepository.save(optionalUser.get());
+        this.logService.setLog("USER LOGOUT", user);
+    }
+
+
+    @Override
+    public void updateLoginAttempt(final UserEntity userEntity,
+                                   final int loginAttempt) {
+        userEntity.setLoginAttempt(loginAttempt);
+        this.userRepository.save(userEntity);
+        this.logService.setLog("LOGIN ATTEMPT", userEntity.getIdentifier(), "Login attempt: " + loginAttempt);
+        LOGGER.info("User {} failed login.", userEntity.getIdentifier());
+    }
+
+    @Override
+    public void updateLogin(final UserEntity userEntity,
+                                   final int loginAttempt) {
+        userEntity.setLoginAttempt(loginAttempt);
+        userEntity.setLoginDate(LocalDateTime.now());
+        this.userRepository.save(userEntity);
+        this.logService.setLog("UPDATED LOGIN INFORMATION", userEntity.getIdentifier(), String.format("Updated login date: %s. "
+                + "And login attempt: %d", userEntity.getLoginDate(), loginAttempt));
+        LOGGER.info("User {} login.", userEntity.getIdentifier());
+    }
+
+    @Override
+    public UserEntity activeUser(final Long user) {
+        final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
+        if (userEntity.isPresent()) {
+            userEntity.get().setStatus(StatusEnum.ACTIVE);
+            this.userRepository.save(userEntity.get());
+            LOGGER.info("User activated: Id: {}", userEntity.get().getIdentifier());
+            this.logService.setLog("ACTIVATED ACCOUNT", user);
+            return userEntity.get();
+        } else {
+            throw new UserNotFoundException("User not found to active: " + user);
+        }
+    }
+
+    @Override
+    public UserEntity blockUser(final Long user) {
+        final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
+        if (userEntity.isPresent()) {
+            userEntity.get().setStatus(StatusEnum.BLOCKED);
+            this.userRepository.save(userEntity.get());
+            LOGGER.info("User blocked: Id: {}", userEntity.get().getIdentifier());
+            this.logService.setLog("BLOCKED ACCOUNT", user);
+            return userEntity.get();
+        } else {
+            throw new UserNotFoundException("User not found to block: " + user);
+        }
+    }
+
+
+    @Override
+    public void deleteUser(final Long user) {
+        final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
+        if (userEntity.isPresent()) {
+            this.userRepository.delete(userEntity.get());
+            LOGGER.info("User deleted: Id: {}", user);
+            this.logService.setLog("DELETED ACCOUNT", user);
+        } else {
+            throw new UserNotFoundException("User not found to delete: " + user);
+        }
+    }
+
+    @Override
+    public TotalAccountVO getTotalAccount() {
+        TotalAccountProjection projection = this.userRepository.getTotalAccount();
+        return new TotalAccountVO(
+                projection.getTotal(),
+                projection.getTotalActive(),
+                projection.getTotalInactive(),
+                projection.getTotalPending(),
+                projection.getTotalBlocked(),
+                projection.getTotalActiveSession()
+        );
+    }
+
+
+    @Override
+    public Page<UserEntity> getPendingUsers(final int page,
+                                            final int size,
+                                            final String sortBy,
+                                            final String direction) {
+        final Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        final Pageable pageable = PageRequest.of(page, size, sort);
+
+        return this.userRepository.findByStatus(StatusEnum.PENDING, pageable);
+    }
+
+    @Override
+    public Page<UserEntity> getActiveSessions(final int page,
+                                            final int size,
+                                            final String sortBy,
+                                            final String direction) {
+        final Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        final Pageable pageable = PageRequest.of(page, size, sort);
+
+        return this.userRepository.findByActiveSession(StatusEnum.ACTIVE, pageable);
+    }
+
+    @Override
+    public Page<UserEntity> getBlockedUsers(final int page,
+                                            final int size,
+                                            final String sortBy,
+                                            final String direction) {
+        final Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        final Pageable pageable = PageRequest.of(page, size, sort);
+
+        return this.userRepository.findByStatus(StatusEnum.BLOCKED, pageable);
+    }
+
+    @Override
+    public UserEntity updateUserRole(final Long userIdentifier,
+                                     final RolesUserEnum role,
+                                     final Long userRequested) {
+        Optional<UserEntity> user = this.userRepository.findByIdentifier(userIdentifier);
+        if (user.isPresent()) {
+            user.get().setRole(role);
+            user.get().setUpdateDate(LocalDateTime.now());
+            userRepository.save(user.get());
+            LOGGER.info("Updated role: {} for user: {} by user: {} ", role.getDescription() , userIdentifier, userRequested );
+            this.logService.setLog("UPDATED ROLE", userIdentifier,String.format(
+                        "Updated role %s for user: %d by user: %d", role.getDescription(), userIdentifier, userRequested));
+            return user.get();
+        } else {
+            throw new UserNotFoundException("User not found. User: " + userIdentifier);
+        }
+    }
+
+    @Override
+    public Page<UserEntity> getInactiveUsers(final int page,
+                                            final int size,
+                                            final String sortBy,
+                                            final String direction) {
+        final Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        final Pageable pageable = PageRequest.of(page, size, sort);
+
+        return this.userRepository.findByStatus(StatusEnum.INACTIVE, pageable);
+    }
+
+    @Override
+    public Page<UserEntity> getUsers(final int page,
+                                           final int size,
+                                           final String sortBy,
+                                           final String direction,
+                                           final Long userIdentifier,
+                                            final String username,
+                                            final String name) {
+        Sort sort;
+        if ("username".equals(sortBy)) {
+            sort = direction.equalsIgnoreCase("desc")
+                    ? JpaSort.unsafe("u.username DESC")
+                    : JpaSort.unsafe("u.username ASC");
+        } else {
+            sort = direction.equalsIgnoreCase("desc")
+                    ? Sort.by(sortBy).descending()
+                    : Sort.by(sortBy).ascending();
+        }
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return this.userRepository.findByUsernameOrIdentifier(userIdentifier, username, name, pageable);
+    }
+
+    @Override
+    public Page<UserEntity> getActiveUsers(final int page,
+                                           final int size,
+                                           final String sortBy,
+                                           final String direction) {
+        final Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        final Pageable pageable = PageRequest.of(page, size, sort);
+
+        return this.userRepository.findByStatus(StatusEnum.ACTIVE, pageable);
+    }
+
+    @Override
+    public int deleteOldAccounts() {
+        return this.userRepository.deleteOldAccounts(LocalDateTime.now().minusDays(60));
+    }
+
+    @Override
+    public int deactivateUsers() {
+        return this.userRepository.deactivateUsers(LocalDateTime.now().minusDays(30), StatusEnum.INACTIVE, StatusEnum.ACTIVE);
+    }
+
+    @Override
+    public void createDefaultUsers() {
+        final Optional<UserEntity> user = this.userRepository.findByUsername(USER);
+        if (user.isEmpty()) {
+            LOGGER.info("Creating user user");
+            final String passwordEncrypted = this.passwordService.encryptPassword(USER);
+            final UserEntity userEntity = this.saveUser(passwordEncrypted, USER, "dsadas@gmail.com", "User", StatusEnum.ACTIVE,
+                    RolesUserEnum.USER);
+            LOGGER.info("User user created");
+            this.logService.setLog("CREATE ACCOUNT", userEntity.getIdentifier(),"User user created");
+        } else {
+            LOGGER.info("User user already exists");
+        }
+        final Optional<UserEntity> analyst = this.userRepository.findByUsername(ANALYST);
+        if (analyst.isEmpty()) {
+            LOGGER.info("Creating user analyst");
+            final String passwordEncrypted = this.passwordService.encryptPassword(ANALYST);
+            final UserEntity userEntity = this.saveUser(passwordEncrypted, ANALYST, "analyst@user.com", "Analyst", StatusEnum.ACTIVE,
+                    RolesUserEnum.ANALYST);
+            LOGGER.info("User analyst created");
+            this.logService.setLog("CREATE ACCOUNT", userEntity.getIdentifier(),"User analyst created");
+        } else {
+            LOGGER.info("User analyst already exists");
+        }
+        final Optional<UserEntity> admin = this.userRepository.findByUsername(ADMIN);
+        if (admin.isEmpty()) {
+            LOGGER.info("Creating user admin");
+            final String passwordEncrypted = this.passwordService.encryptPassword(ADMIN);
+            final UserEntity userEntity = this.saveUser(passwordEncrypted, ADMIN, "admin2@user.com", "Administrator Admin", StatusEnum.ACTIVE,
+                    RolesUserEnum.ADMIN);
+            LOGGER.info("User admin created");
+            this.logService.setLog("CREATE ACCOUNT", userEntity.getIdentifier(),"User admin2 created");
+        } else {
+            LOGGER.info("User admin already exists");
+        }
+    }
+
+    @Override
+    public void resetPassword(final String newPassword,
+                                           final String email) {
+        final UserEntity userEntity = this.userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
+        final String encryptedPassword = this.passwordService.encryptPassword(newPassword);
+        userEntity.setUpdateDate(LocalDateTime.now());
+        userEntity.setPassword(encryptedPassword);
+        this.userRepository.save(userEntity);
+        // TODO Excluir DO PASSWORDRESET TOKEN REPOSITORY
+    }
+
+    @Override
+    public void updateUserStatus(final StatusEnum statusEnum,
+                          final UserEntity user) {
+        user.setStatus(statusEnum);
+        this.userRepository.save(user);
+    }
+
+}
