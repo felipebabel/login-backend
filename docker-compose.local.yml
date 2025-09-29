@@ -20,10 +20,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/login_project
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin
-      SPRING_SECURITY_USER_NAME: your-username
-      SPRING_SECURITY_USER_PASSWORD: your-password
-      SECRET_KEY: S
-      SECRET_KEY_TOKEN: mySecretKeyForTesting_1234567890abcdef
+      SECRET_KEY: mySecretKeyForTesting_1234567890abcdef
       EMAIL_FROM: babelfelipe@gmail.com
       FRONT_END_URL: http://localhost:5173
       MAX_SECONDS_TOKEN: 30

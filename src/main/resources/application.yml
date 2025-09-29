@@ -4,10 +4,6 @@ server:
 spring:
   application:
     name: security-spring
-  security:
-    user:
-      name: your-username
-      password: your-password
   datasource:
     url: jdbc:postgresql://localhost:5432/login-project
     username: admin
@@ -25,13 +21,10 @@ security-project:
   secret-key: ${SECRET_KEY}
 
 email-service:
-  url: ${EMAIL_SERVICE_URL}
   from: ${EMAIL_FROM}
 
 front-end:
   url: ${FRONT_END_URL}
-  secret-key-token: ${SECRET_KEY_TOKEN}
-  max-seconds-token: ${MAX_SECONDS_TOKEN}
 
 swagger:
   api:
