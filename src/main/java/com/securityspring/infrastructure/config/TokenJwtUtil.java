@@ -14,10 +14,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class TokenJwtUtil {
 
-    private static final String SECRET_KEY = "MinhaChaveSuperSecretaMuitoLongaParaJWT12345"; //todo env
+    private final ProjectProperties projectProperties;
+
+    public TokenJwtUtil(ProjectProperties projectProperties) {
+        this.projectProperties = projectProperties;
+    }
 
     public String generateVerificationToken(final Long userId, final String email) {
-        Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        Key key = Keys.hmacShaKeyFor(this.getSecretKey().getBytes());
 
         Date expiration = new Date(System.currentTimeMillis() + 15 * 60 * 1000);
 
@@ -32,7 +36,7 @@ public class TokenJwtUtil {
 
     public Long validateVerificationToken(final String token) throws JwtException {
         try {
-            Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+            Key key = Keys.hmacShaKeyFor(this.getSecretKey().getBytes());
 
             Jws<Claims> claimsJws = Jwts.parserBuilder()
                     .setSigningKey(key)
@@ -51,6 +55,10 @@ public class TokenJwtUtil {
         } catch (JwtException e) {
             throw new JwtException("Invalid token", e);
         }
+    }
+
+    private String getSecretKey() {
+        return this.projectProperties.getProperty("security-project.secret-key");
     }
 
 }

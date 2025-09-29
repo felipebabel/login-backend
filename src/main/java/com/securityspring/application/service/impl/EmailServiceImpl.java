@@ -14,7 +14,10 @@ import com.securityspring.domain.model.PasswordResetTokenEntity;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.domain.port.PasswordResetTokenRepository;
 import com.securityspring.domain.port.UserRepository;
+import com.securityspring.infrastructure.config.ProjectProperties;
 import com.securityspring.infrastructure.config.TokenJwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -27,17 +30,21 @@ public class EmailServiceImpl implements EmailServiceApi {
     @Autowired
     private JavaMailSender mailSender;
 
+    private final ProjectProperties projectProperties;
+
     private final TokenJwtUtil tokenJwtUtil;
 
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
+    static final Logger LOGGER = LoggerFactory.getLogger(EmailServiceImpl.class);
 
     private final UserRepository userRepository;
 
     @Autowired
-    public EmailServiceImpl(final TokenJwtUtil tokenJwtUtil,
+    public EmailServiceImpl(final ProjectProperties projectProperties, final TokenJwtUtil tokenJwtUtil,
                             final PasswordResetTokenRepository repository,
                             final UserRepository userRepository) {
+        this.projectProperties = projectProperties;
         this.tokenJwtUtil = tokenJwtUtil;
         this.passwordResetTokenRepository = repository;
         this.userRepository = userRepository;
@@ -45,26 +52,27 @@ public class EmailServiceImpl implements EmailServiceApi {
 
     @Override
     public void sendEmail(final String email) {
+        LOGGER.info("Sending email");
         final UserEntity userEntity = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
         final String code = generateCode();
         final SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("babelfelipe@gmail.com");
+        message.setFrom(this.projectProperties.getProperty("email-service.from"));
         message.setTo(email);
         message.setSubject("");
         message.setText(code);
         this.mailSender.send(message);
-        // TODO LOG
         this.saveToken(code, userEntity);
+        LOGGER.info("Email sent");
     }
 
     @Override
     public void sendEmail(final UserEntity userEntity) throws MessagingException, UnsupportedEncodingException {
-        MimeMessage mimeMessage = this.mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
-
-
-        final String verificationLink = "http://localhost:5173/#/validate-code-email?flow=email-verification&email="
+        LOGGER.info("Sending email");
+        final MimeMessage mimeMessage = this.mailSender.createMimeMessage();
+        final MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+        final String frontUrl = this.projectProperties.getProperty("front-end.url");
+        final String verificationLink = frontUrl + "/#/validate-code-email?flow=email-verification&email="
                 + URLEncoder.encode(userEntity.getEmail(), "UTF-8");
         final String code = generateCode();
         String message = "<p>Hello " + userEntity.getName() + ",</p>"
@@ -81,15 +89,17 @@ public class EmailServiceImpl implements EmailServiceApi {
         helper.setTo(userEntity.getEmail());
         helper.setSubject("Verify Your Email to Activate Your Account");
         helper.setText(message, true);
-        helper.setFrom("babelfelipe@gmail.com");
+        helper.setFrom(this.projectProperties.getProperty("email-service.from"));
 
         this.mailSender.send(mimeMessage);
         this.saveToken(code, userEntity);
+        LOGGER.info("Email sent");
     }
 
     @Override
     public UserEntity validateCode(final String code,
                              final String email) {
+        LOGGER.info("Validating code");
         final UserEntity userEntity = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
         PasswordResetTokenEntity token = this.passwordResetTokenRepository.findValidToken(userEntity, code, StatusEnum.ACTIVE, LocalDateTime.now())
