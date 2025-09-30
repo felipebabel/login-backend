@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.securityspring.domain.enums.LanguagesEnum;
 import com.securityspring.domain.enums.RolesUserEnum;
 import com.securityspring.domain.enums.StatusEnum;
 
@@ -69,5 +70,13 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "DS_ROLE", nullable = false)
     private RolesUserEnum role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "DS_LANGUAGE")
+    private LanguagesEnum language;
+
+    @Builder.Default
+    @Column(name = "DT_PASSWORD_CHANGE", nullable = false)
+    private LocalDateTime passwordChangeDate = LocalDateTime.now();
 
 }

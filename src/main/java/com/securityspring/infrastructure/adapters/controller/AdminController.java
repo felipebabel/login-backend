@@ -1,5 +1,6 @@
 package com.securityspring.infrastructure.adapters.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
 import com.securityspring.domain.enums.RolesUserEnum;
@@ -117,10 +118,11 @@ public class AdminController implements AdminApi {
     public ResponseEntity<Object> updateUserRole(
             @RequestParam final Long userIdentifier,
             @RequestParam final String role,
-            @RequestParam final Long userRequired
+            @RequestParam final Long userRequired,
+            final HttpServletRequest httpServletRequest
     ) {
         final RolesUserEnum rolesUserEnum = RolesUserEnum.fromString(role);
-        final UserEntity user = loginService.updateUserRole(userIdentifier, rolesUserEnum, userRequired);
+        final UserEntity user = loginService.updateUserRole(userIdentifier, rolesUserEnum, userRequired, httpServletRequest);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -163,16 +165,18 @@ public class AdminController implements AdminApi {
 
     @Override
     @DeleteMapping("delete-user")
-    public ResponseEntity<Object> deleteUser(@RequestParam("user") Long userIdentifier) {
-         this.loginService.deleteUser(userIdentifier);
+    public ResponseEntity<Object> deleteUser(@RequestParam("user") Long userIdentifier,
+                                             final HttpServletRequest httpServletRequest) {
+         this.loginService.deleteUser(userIdentifier, httpServletRequest);
         LOGGER.info("User deleted successful");
         return ResponseEntity.noContent().build();
     }
 
     @Override
     @PutMapping("inactive-user")
-    public ResponseEntity<Object> inactiveUser(@RequestParam("user") Long userIdentifier) {
-        UserEntity userEntity = loginService.inactiveAccount(userIdentifier);
+    public ResponseEntity<Object> inactiveUser(@RequestParam("user") Long userIdentifier,
+                                               final HttpServletRequest httpServletRequest) {
+        UserEntity userEntity = loginService.inactiveAccount(userIdentifier, httpServletRequest);
         LOGGER.info("Inactive account successful");
         return new ResponseEntity<>(userEntity, HttpStatus.OK);
     }
@@ -181,7 +185,7 @@ public class AdminController implements AdminApi {
     @PutMapping("force-password-change")
     public ResponseEntity<Object> forcePasswordChange(@RequestParam("user") Long userIdentifier) {
         UserEntity userEntity = loginService.forcePasswordChange(userIdentifier);
-    //todo invalidate token session
+        //todo invalidate token session
         LOGGER.info("Force password change for user {} successful", userIdentifier);
         return new ResponseEntity<>(userEntity, HttpStatus.OK);
     }

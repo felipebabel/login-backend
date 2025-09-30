@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Random;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletRequest;
 import com.securityspring.application.service.api.EmailServiceApi;
 import com.securityspring.domain.enums.StatusEnum;
 import com.securityspring.domain.exception.CodeNotValidOrExpiredException;
@@ -51,7 +52,8 @@ public class EmailServiceImpl implements EmailServiceApi {
     }
 
     @Override
-    public void sendEmail(final String email) {
+    public void sendEmail(final String email,
+                          final HttpServletRequest httpServletRequest) {
         LOGGER.info("Sending email");
         final UserEntity userEntity = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
@@ -63,6 +65,7 @@ public class EmailServiceImpl implements EmailServiceApi {
         message.setText(code);
         this.mailSender.send(message);
         this.saveToken(code, userEntity);
+        //TODO LOG
         LOGGER.info("Email sent");
     }
 
@@ -93,12 +96,14 @@ public class EmailServiceImpl implements EmailServiceApi {
 
         this.mailSender.send(mimeMessage);
         this.saveToken(code, userEntity);
+        //todo log
         LOGGER.info("Email sent");
     }
 
     @Override
     public UserEntity validateCode(final String code,
-                             final String email) {
+                             final String email,
+                                   final HttpServletRequest httpServletRequest) {
         LOGGER.info("Validating code");
         final UserEntity userEntity = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));

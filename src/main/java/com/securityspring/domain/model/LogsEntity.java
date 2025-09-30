@@ -1,7 +1,5 @@
 package com.securityspring.domain.model;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -55,11 +53,13 @@ public class LogsEntity {
     )
     private String description;
     @Column(
-            name = "DS_ADDRESS",
-            length = 255,
-            nullable = false
+            name = "DS_ADDRESS"
     )
     private String ipAddress;
+    @Column(
+            name = "DS_DEVICE_NAME"
+    )
+    private String deviceName;
     @Column(
             name = "DT_UPDATE",
             nullable = false

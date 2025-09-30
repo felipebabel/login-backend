@@ -12,6 +12,6 @@ public class LogDto {
     private String description;
     private String ipAddress;
     private LocalDateTime date;
-    private Long userId;       // apenas o ID do usuário
-    private String username;   // opcional, se quiser
+    private Long userId;
+    private String username;
 }
