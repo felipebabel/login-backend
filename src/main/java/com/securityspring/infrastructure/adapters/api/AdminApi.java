@@ -1,5 +1,6 @@
 package com.securityspring.infrastructure.adapters.api;
 
+import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -10,7 +11,6 @@ import com.securityspring.domain.exception.BaseException;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 public interface AdminApi {
@@ -101,7 +101,8 @@ public interface AdminApi {
     ResponseEntity<Object> updateUserRole(
             @Parameter(description = "Page number, starting from 0", example = "0") @RequestParam final Long userIdentifier,
             @Parameter(description = "Number of records per page", example = "10") @RequestParam final String role,
-                        @Parameter(description = "Number of records per page", example = "10") @RequestParam final Long userRequired
+                        @Parameter(description = "Number of records per page", example = "10") @RequestParam final Long userRequired,
+            final HttpServletRequest httpServletRequest
     ) throws BadRequestException;
 
     @Operation(summary = "Get Active Sessions Accounts",
@@ -149,7 +150,8 @@ public interface AdminApi {
             @ApiResponse(responseCode = "400", description = "Invalid user identifier")
     })
     ResponseEntity<Object> inactiveUser(
-            @Parameter(description = "User identifier to inactivate", example = "123") @RequestParam("user") Long user
+            @Parameter(description = "User identifier to inactivate", example = "123") @RequestParam("user") Long user,
+            final HttpServletRequest httpServletRequest
     ) throws BadRequestException;
 
     @Operation(summary = "Inactive User Account", //TODO FIX
@@ -203,6 +205,7 @@ public interface AdminApi {
             @ApiResponse(responseCode = "400", description = "Invalid user identifier")
     })
     ResponseEntity<Object> deleteUser(
-            @Parameter(description = "User identifier to delete", example = "123") @RequestParam("user") Long user
+            @Parameter(description = "User identifier to delete", example = "123") @RequestParam("user") Long user,
+            final HttpServletRequest httpServletRequest
     ) throws BadRequestException;
 }

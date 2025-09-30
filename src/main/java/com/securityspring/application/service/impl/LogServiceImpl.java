@@ -2,6 +2,7 @@ package com.securityspring.application.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.domain.model.UserEntity;
@@ -81,17 +82,32 @@ public class LogServiceImpl implements LogServiceApi {
     @Override
     public void setLog(final String action, final Long user)  {
         Optional<UserEntity> userEntity = userRepository.findByIdentifier(user);
+        LogsEntity logsEntity = new LogsEntity();
+        logsEntity.setAction(action);
+        logsEntity.setDate(LocalDateTime.now());
+        logsEntity.setDescription("");
+        logsEntity.setIpAddress("");
+        userEntity.ifPresent(logsEntity::setUser);
+        this.logRepository.save(logsEntity);
+    }
+
+    @Override
+    public void setLog(final String action, final Long user,
+                       final HttpServletRequest httpServletRequest)  {
+        Optional<UserEntity> userEntity = userRepository.findByIdentifier(user);
         if (userEntity.isPresent()) {
             LogsEntity logsEntity = new LogsEntity();
             logsEntity.setAction(action);
             logsEntity.setDate(LocalDateTime.now());
             logsEntity.setDescription("");
-            logsEntity.setIpAddress("");
+            logsEntity.setIpAddress(httpServletRequest.getRemoteAddr());
+            logsEntity.setDeviceName(httpServletRequest.getHeader("User-Agent"));
             logsEntity.setUser(userEntity.get());
             this.logRepository.save(logsEntity);
             return;
         }
         LOGGER.info("Not found user: {}", user);
+
     }
 
     @Override

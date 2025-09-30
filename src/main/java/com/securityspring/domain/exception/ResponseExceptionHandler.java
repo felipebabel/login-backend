@@ -42,7 +42,7 @@ public class ResponseExceptionHandler {
     }
 
     @ExceptionHandler({UserPendingException.class, UserBlockedException.class, UserInactiveException.class, InvalidPasswordException.class,
-            UserAlreadyExistsException.class})
+            UserAlreadyExistsException.class, PasswordExpiredException.class, SamePasswordException.class})
     public ResponseEntity<DefaultResponse> handleUserExceptions(RuntimeException ex) {
         LOGGER.error("{}: {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
         return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);

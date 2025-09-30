@@ -3,11 +3,13 @@ package com.securityspring.application.service.api;
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import com.securityspring.domain.enums.RolesUserEnum;
 import com.securityspring.domain.enums.StatusEnum;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
+import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
 import org.springframework.data.domain.Page;
 
@@ -20,7 +22,11 @@ public interface LoginServiceApi {
                         final StatusEnum statusEnum,
                         final RolesUserEnum role);
 
-    UserEntity inactiveAccount(final Long user);
+    UserEntity updateUser(final UserEntity user,
+                                 final UpdateAccountRequestDto account);
+
+    UserEntity inactiveAccount(final Long user,
+                               final HttpServletRequest httpServletRequest);
 
     UserEntity forcePasswordChange(final Long user);
 
@@ -30,11 +36,18 @@ public interface LoginServiceApi {
 
     Optional<UserEntity> findUser(final String user);
 
-    UserEntity login(final LoginRequestDto userEntity);
+    UserEntity login(final LoginRequestDto userEntity,
+                    final HttpServletRequest httpServletRequest);
 
-    void createAccount(final CreateAccountRequestDto createAccount) throws MessagingException, UnsupportedEncodingException;
+    void createAccount(final CreateAccountRequestDto createAccount,
+                       final HttpServletRequest httpServletRequest) throws MessagingException, UnsupportedEncodingException;
 
-    void logout(final Long user);
+    void updateAccount(final UpdateAccountRequestDto createAccount,
+                       final Long userIdentifier,
+                       final HttpServletRequest httpServletRequest) throws MessagingException, UnsupportedEncodingException;
+
+    void logout(final Long user,
+                final HttpServletRequest httpServletRequest);
 
     void updateLoginAttempt(final UserEntity userEntity,
                             final int loginAttempt);
@@ -59,7 +72,8 @@ public interface LoginServiceApi {
 
     UserEntity updateUserRole(final Long userIdentifier,
                               final RolesUserEnum role,
-                              final Long userRequested);
+                              final Long userRequested,
+                              final HttpServletRequest httpServletRequest);
 
     Page<UserEntity> getInactiveUsers(final int page,
                                      final int size,
@@ -80,7 +94,8 @@ public interface LoginServiceApi {
 
     UserEntity blockUser(final Long user);
 
-    void deleteUser(final Long user);
+    void deleteUser(final Long user,
+                    final HttpServletRequest httpServletRequest);
 
 
     Page<UserEntity> getActiveUsers(final int page,
@@ -95,7 +110,10 @@ public interface LoginServiceApi {
     void createDefaultUsers();
 
     void resetPassword(final String newPassword,
-                              final String email);
+                        final String email,
+                       final String user,
+                       final HttpServletRequest httpServletRequest);
+
     void updateUserStatus(final StatusEnum statusEnum,
                        final UserEntity user);
 
