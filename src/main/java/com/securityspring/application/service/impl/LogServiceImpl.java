@@ -75,7 +75,8 @@ public class LogServiceImpl implements LogServiceApi {
                 l.getIpAddress(),
                 l.getDate(),
                 l.getUser() != null ? l.getUser().getIdentifier() : null,
-                l.getUser() != null ? l.getUser().getUsername() : null
+                l.getUser() != null ? l.getUser().getUsername() : null,
+                l.getDeviceName()
         ));
     }
 
