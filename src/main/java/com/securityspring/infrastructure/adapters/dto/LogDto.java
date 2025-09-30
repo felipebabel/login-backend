@@ -14,4 +14,5 @@ public class LogDto {
     private LocalDateTime date;
     private Long userId;
     private String username;
+    private String deviceName;
 }
