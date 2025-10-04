@@ -1,9 +1,12 @@
 package com.securityspring.application.service.impl;
 
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
@@ -11,9 +14,11 @@ import com.securityspring.application.service.api.EmailServiceApi;
 import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
 import com.securityspring.application.service.api.PasswordServiceApi;
+import com.securityspring.domain.enums.GenderEnum;
 import com.securityspring.domain.enums.LanguagesEnum;
 import com.securityspring.domain.enums.RolesUserEnum;
 import com.securityspring.domain.enums.StatusEnum;
+import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.domain.exception.InvalidPasswordException;
 import com.securityspring.domain.exception.PasswordExpiredException;
 import com.securityspring.domain.exception.SamePasswordException;
@@ -27,7 +32,9 @@ import com.securityspring.domain.model.UserEntity;
 import com.securityspring.domain.port.ConfigRepository;
 import com.securityspring.domain.port.UserRepository;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
+import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
+import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.dto.TotalAccountProjection;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
@@ -93,6 +100,15 @@ public class LoginServiceImpl implements LoginServiceApi {
         user.setName(account.getName());
         user.setLastAccessDate(LocalDateTime.now());
         user.setLanguage(LanguagesEnum.fromString(account.getLanguage()));
+        user.setAddress(account.getAddress());
+        user.setPhone(account.getPhone());
+        user.setState(account.getState());
+        user.setZipCode(account.getZipCode());
+        user.setCountry(account.getCountry());
+        user.setAddressComplement(account.getAddressComplement());
+        user.setBirthDate(account.getBirthDate());
+        user.setGender(GenderEnum.fromString(account.getGender()));
+        user.setCity(account.getCity());
         this.userRepository.save(user);
         LOGGER.info("User updated: Id: {}", user.getIdentifier());
         return user;
@@ -104,19 +120,21 @@ public class LoginServiceImpl implements LoginServiceApi {
                                final String email,
                                final String firstName,
                                final StatusEnum statusEnum,
-                               final RolesUserEnum role) {
+                               final RolesUserEnum role,
+                               final LanguagesEnum language) {
         final UserEntity userEntity = new UserEntity();
         userEntity.setUsername(user);
         userEntity.setPassword(password);
         userEntity.setName(firstName);
         userEntity.setEmail(email);
+        userEntity.setLanguage(language);
         userEntity.setStatus(statusEnum);
         userEntity.setLastAccessDate(LocalDateTime.now());
         userEntity.setCreationUserDate(LocalDateTime.now());
         userEntity.setLoginAttempt(0);
         userEntity.setRole(role);
-        if (user.equals("user")) {         //todo tirar, so pra teste
-            userEntity.setPasswordChangeDate(LocalDateTime.now().minusDays(89));
+        if (user.equalsIgnoreCase("user")) {
+            userEntity.setPasswordChangeDate(LocalDate.now().minusDays(89));
         }
         this.userRepository.save(userEntity);
         LOGGER.info("User saved: Id: {}", userEntity.getIdentifier());
@@ -131,7 +149,7 @@ public class LoginServiceImpl implements LoginServiceApi {
             userEntity.get().setStatus(StatusEnum.INACTIVE);
             this.userRepository.save(userEntity.get());
             LOGGER.info("User inactivated: Id: {}", userEntity.get().getIdentifier());
-            this.logService.setLog("INACTIVATE ACCOUNT", user);
+            this.logService.setLog("INACTIVATE ACCOUNT", user, httpServletRequest);
             return userEntity.get();
         } else {
             throw new UserNotFoundException("User not found to inactive: " + user);
@@ -139,13 +157,14 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
-    public UserEntity forcePasswordChange(final Long user) {
+    public UserEntity forcePasswordChange(final Long user,
+                                          final HttpServletRequest httpServletRequest) {
         final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
         if (userEntity.isPresent()) {
             userEntity.get().setForcePasswordChange(true);
             this.userRepository.save(userEntity.get());
             LOGGER.info("User forced to change password: Id: {}", user);
-            this.logService.setLog("FORCED CHANGE PASSWORD", user, "User forced to change password.");
+            this.logService.setLog("FORCED CHANGE PASSWORD", user, "User forced to change password.", httpServletRequest);
             return userEntity.get();
         } else {
             throw new UserNotFoundException("User not found to force change password: " + user);
@@ -215,28 +234,29 @@ public class LoginServiceImpl implements LoginServiceApi {
         if (config.isPresent()) {
             value = Long.parseLong(config.get().getValue());
         }
-        final LocalDateTime expiryDate = LocalDateTime.now().minusDays(value);
+        final LocalDate expiryDate = LocalDate.now().minusDays(value);
         if (user.getPasswordChangeDate().isBefore(expiryDate)) {
             throw new PasswordExpiredException("Password expired");
         }
         if (!passwordService.checkPassword(loginRequestDto.getPassword(), user.getPassword())) {
-            handleInvalidPassword(user);
+            handleInvalidPassword(user, httpServletRequest);
         }
 
-        updateLoginAttempt(user, 0);
+        updateLoginAttempt(user, 0, "LOGIN ATTEMPT OK");
         updateLogin(user, 0);
-        this.logService.setLog("LOGIN ACCOUNT", user.getIdentifier());
+        this.logService.setLog("LOGIN ACCOUNT", user.getIdentifier(), httpServletRequest);
         return user;
     }
 
 
-    private void handleInvalidPassword(UserEntity user) {
+    private void handleInvalidPassword(final UserEntity user,
+                                       final HttpServletRequest httpServletRequest) {
         int attempts = user.getLoginAttempt() + 1;
         if (attempts >= 5) {
-            blockUser(user.getIdentifier());
+            blockUser(user.getIdentifier(), httpServletRequest);
             throw new InvalidPasswordException("User blocked due to too many failed login attempts");
         }
-        updateLoginAttempt(user, attempts);
+        updateLoginAttempt(user, attempts, "LOGIN ATTEMPT FAILED");
         throw new InvalidPasswordException("Invalid password");
     }
 
@@ -249,10 +269,21 @@ public class LoginServiceImpl implements LoginServiceApi {
         }
         final String encryptedPassword = this.passwordService.encryptPassword(createAccount.getPassword());
         final UserEntity user = this.saveUser(encryptedPassword, createAccount.getUser(), createAccount.getEmail(),
-                createAccount.getName(), StatusEnum.PENDING, RolesUserEnum.USER);
-        this.logService.setLog("CREATED ACCOUNT", user.getIdentifier());
-        this.emailService.sendEmail(user);
+                createAccount.getName(), StatusEnum.PENDING, RolesUserEnum.USER, LanguagesEnum.fromString(createAccount.getLanguage()));
+        this.logService.setLog("CREATED ACCOUNT", user.getIdentifier(), httpServletRequest);
+        this.emailService.sendEmail(user, httpServletRequest);
         LOGGER.info("Account created successfully");
+    }
+
+    @Override
+    public List<NewUsersPerMonthDTO> getNewAccountMonth() {
+        List<Object[]> results = userRepository.getNewAccountMonth();
+        return results.stream()
+                .map(r -> new NewUsersPerMonthDTO(
+                        ((Number) r[0]).intValue(),
+                        ((Number) r[1]).intValue(),
+                        ((Number) r[2]).longValue()))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -268,7 +299,7 @@ public class LoginServiceImpl implements LoginServiceApi {
             }
         }
         final UserEntity userUpdated = this.updateUser(user, account);
-        this.logService.setLog("UPDATE ACCOUNT", userUpdated.getIdentifier());
+        this.logService.setLog("UPDATE ACCOUNT", userUpdated.getIdentifier(), httpServletRequest);
         LOGGER.info("Account updated successfully");
     }
 
@@ -287,10 +318,11 @@ public class LoginServiceImpl implements LoginServiceApi {
 
     @Override
     public void updateLoginAttempt(final UserEntity userEntity,
-                                   final int loginAttempt) {
+                                   final int loginAttempt,
+                                   final String action) {
         userEntity.setLoginAttempt(loginAttempt);
         this.userRepository.save(userEntity);
-        this.logService.setLog("LOGIN ATTEMPT", userEntity.getIdentifier(), "Login attempt: " + loginAttempt);
+        this.logService.setLog(action, userEntity.getIdentifier(), "Login attempt: " + loginAttempt);
         LOGGER.info("User {} failed login.", userEntity.getIdentifier());
     }
 
@@ -306,13 +338,14 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
-    public UserEntity activeUser(final Long user) {
+    public UserEntity activeUser(final Long user,
+                                 final HttpServletRequest httpServletRequest) {
         final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
         if (userEntity.isPresent()) {
             userEntity.get().setStatus(StatusEnum.ACTIVE);
             this.userRepository.save(userEntity.get());
             LOGGER.info("User activated: Id: {}", userEntity.get().getIdentifier());
-            this.logService.setLog("ACTIVATED ACCOUNT", user);
+            this.logService.setLog("ACTIVATED ACCOUNT", user, httpServletRequest);
             return userEntity.get();
         } else {
             throw new UserNotFoundException("User not found to active: " + user);
@@ -320,13 +353,14 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
-    public UserEntity blockUser(final Long user) {
+    public UserEntity blockUser(final Long user,
+                                final HttpServletRequest httpServletRequest) {
         final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
         if (userEntity.isPresent()) {
             userEntity.get().setStatus(StatusEnum.BLOCKED);
             this.userRepository.save(userEntity.get());
             LOGGER.info("User blocked: Id: {}", userEntity.get().getIdentifier());
-            this.logService.setLog("BLOCKED ACCOUNT", user);
+            this.logService.setLog("BLOCKED ACCOUNT", user, httpServletRequest);
             return userEntity.get();
         } else {
             throw new UserNotFoundException("User not found to block: " + user);
@@ -340,7 +374,7 @@ public class LoginServiceImpl implements LoginServiceApi {
         if (userEntity.isPresent()) {
             this.userRepository.delete(userEntity.get());
             LOGGER.info("User deleted: Id: {}", user);
-            this.logService.setLog("DELETED ACCOUNT", user);
+            this.logService.setLog("DELETED ACCOUNT", user, httpServletRequest);
         } else {
             throw new UserNotFoundException("User not found to delete: " + user);
         }
@@ -414,7 +448,7 @@ public class LoginServiceImpl implements LoginServiceApi {
             userRepository.save(user.get());
             LOGGER.info("Updated role: {} for user: {} by user: {} ", role.getDescription(), userIdentifier, userRequested);
             this.logService.setLog("UPDATED ROLE", userIdentifier, String.format(
-                    "Updated role %s for user: %d by user: %d", role.getDescription(), userIdentifier, userRequested));
+                    "Updated role %s for user: %d by user: %d", role.getDescription(), userIdentifier, userRequested), httpServletRequest);
             return user.get();
         } else {
             throw new UserNotFoundException("User not found. User: " + userIdentifier);
@@ -489,7 +523,7 @@ public class LoginServiceImpl implements LoginServiceApi {
             LOGGER.info("Creating user user");
             final String passwordEncrypted = this.passwordService.encryptPassword(USER);
             final UserEntity userEntity = this.saveUser(passwordEncrypted, USER, "dsadas@gmail.com", "User", StatusEnum.ACTIVE,
-                    RolesUserEnum.USER);
+                    RolesUserEnum.USER, LanguagesEnum.EN);
             LOGGER.info("User user created");
             this.logService.setLog("CREATE ACCOUNT", userEntity.getIdentifier(), "User user created");
         } else {
@@ -500,7 +534,7 @@ public class LoginServiceImpl implements LoginServiceApi {
             LOGGER.info("Creating user analyst");
             final String passwordEncrypted = this.passwordService.encryptPassword(ANALYST);
             final UserEntity userEntity = this.saveUser(passwordEncrypted, ANALYST, "analyst@user.com", "Analyst", StatusEnum.ACTIVE,
-                    RolesUserEnum.ANALYST);
+                    RolesUserEnum.ANALYST, LanguagesEnum.EN);
             LOGGER.info("User analyst created");
             this.logService.setLog("CREATE ACCOUNT", userEntity.getIdentifier(), "User analyst created");
         } else {
@@ -511,7 +545,7 @@ public class LoginServiceImpl implements LoginServiceApi {
             LOGGER.info("Creating user admin");
             final String passwordEncrypted = this.passwordService.encryptPassword(ADMIN);
             final UserEntity userEntity = this.saveUser(passwordEncrypted, ADMIN, "admin2@user.com", "Administrator Admin", StatusEnum.ACTIVE,
-                    RolesUserEnum.ADMIN);
+                    RolesUserEnum.ADMIN, LanguagesEnum.EN);
             LOGGER.info("User admin created");
             this.logService.setLog("CREATE ACCOUNT", userEntity.getIdentifier(), "User admin2 created");
         } else {
@@ -524,6 +558,9 @@ public class LoginServiceImpl implements LoginServiceApi {
                               final String email,
                               final String user,
                               final HttpServletRequest httpServletRequest) {
+        if (Objects.isNull(newPassword) || newPassword.length() < 8) {
+            throw new BadRequestException("The new password must have at least 8 characters.");
+        }
         UserEntity userEntity;
         if (Objects.nonNull(user)) {
             userEntity = this.userRepository.findByUsername(user)
@@ -538,8 +575,9 @@ public class LoginServiceImpl implements LoginServiceApi {
         }
         userEntity.setUpdateDate(LocalDateTime.now());
         userEntity.setPassword(encryptedPassword);
-        userEntity.setPasswordChangeDate(LocalDateTime.now());
+        userEntity.setPasswordChangeDate(LocalDate.now());
         this.userRepository.save(userEntity);
+        this.logService.setLog("PASSWORD RESET", userEntity.getIdentifier(), "Password reset successfully.");
         // TODO Excluir DO PASSWORD RESET TOKEN REPOSITORY
     }
 

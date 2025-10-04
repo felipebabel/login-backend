@@ -7,9 +7,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.domain.exception.BaseException;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -119,6 +119,36 @@ public interface AdminApi {
             @Parameter(description = "Sort direction", example = "asc") @RequestParam(defaultValue = "asc") String direction
     ) throws BadRequestException;
 
+    @Operation(summary = "Get Active Sessions Accounts",
+            description = "Returns a paginated list of users with active sessions account.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of active sessions accounts retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters")
+    })
+    ResponseEntity<Object> getLoginAttempts(
+    ) throws BadRequestException;
+
+    @Operation(summary = "Get Active Sessions Accounts",
+            description = "Returns a paginated list of users with active sessions account.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of active sessions accounts retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters")
+    })
+    ResponseEntity<Object> getNewAccountMonth(
+    ) throws BadRequestException;
+
+    @Operation(summary = "Get Active Sessions Accounts",
+            description = "Returns a paginated list of users with active sessions account.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of active sessions accounts retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request parameters")
+    })
+    ResponseEntity<Object> getAccessesByCountry(
+    ) throws BadRequestException;
+
     @Operation(summary = "Get Inactive Accounts",
             description = "Returns a paginated list of users with inactive account status.")
     @ApiResponses(value = {
@@ -162,7 +192,8 @@ public interface AdminApi {
             @ApiResponse(responseCode = "400", description = "Invalid user identifier")
     })
     ResponseEntity<Object> forcePasswordChange(
-            @Parameter(description = "User identifier to inactivate", example = "123") @RequestParam("user") Long user //TODO FIX
+            @Parameter(description = "User identifier to inactivate", example = "123") @RequestParam("user") Long user,
+            final HttpServletRequest httpServletRequest//TODO FIX
     ) throws BadRequestException;
 
     @Operation(summary = "Get Total Accounts", //todo fix
@@ -183,7 +214,8 @@ public interface AdminApi {
             @ApiResponse(responseCode = "400", description = "Invalid user identifier")
     })
     ResponseEntity<Object> blockUser(
-            @Parameter(description = "User identifier to block", example = "123") @RequestParam("user") Long user
+            @Parameter(description = "User identifier to block", example = "123") @RequestParam("user") Long user,
+            final HttpServletRequest httpServletRequest
     ) throws BadRequestException;
 
     @Operation(summary = "Activate User Account",
@@ -194,7 +226,8 @@ public interface AdminApi {
             @ApiResponse(responseCode = "400", description = "Invalid user identifier")
     })
     ResponseEntity<Object> activeUser(
-            @Parameter(description = "User identifier to activate", example = "123") @RequestParam("user") Long user
+            @Parameter(description = "User identifier to activate", example = "123") @RequestParam("user") Long user,
+            final HttpServletRequest httpServletRequest
     ) throws BadRequestException;
 
     @Operation(summary = "Delete User Account",

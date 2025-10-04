@@ -1,9 +1,12 @@
 package com.securityspring.domain.port;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import com.securityspring.domain.enums.StatusEnum;
 import com.securityspring.domain.model.UserEntity;
+import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
+import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.dto.TotalAccountProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,4 +37,7 @@ public interface UserRepository extends EntityRepository<UserEntity, Long> {
                                                 final String username,
                                                 final String name,
                                                 final Pageable pageable);
+
+    List<Object[]> getNewAccountMonth();
+
 }

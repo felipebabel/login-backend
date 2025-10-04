@@ -7,13 +7,13 @@ import jakarta.validation.Valid;
 import com.securityspring.application.service.api.EmailServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
 import com.securityspring.domain.enums.StatusEnum;
+import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.infrastructure.adapters.api.LoginApi;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
-import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -44,7 +44,7 @@ public class LoginController implements LoginApi {
     @Override
     @PostMapping
     public ResponseEntity<Object> login(@Valid @RequestBody final LoginRequestDto loginRequestDto,
-                                        final HttpServletRequest httpServletRequest) {
+                                        final HttpServletRequest httpServletRequest) throws InterruptedException {
         final UserEntity userEntity = loginService.login(loginRequestDto, httpServletRequest);
         return new ResponseEntity<>(userEntity, HttpStatus.OK);
     }
@@ -85,7 +85,7 @@ public class LoginController implements LoginApi {
     @Override
     @PostMapping("/send-email")
     public ResponseEntity<Object> sendEmail(@RequestParam("email") final String email,
-                                            final HttpServletRequest httpServletRequest) {
+                                            final HttpServletRequest httpServletRequest) throws MessagingException {
         LOGGER.info("Sending email to {}", email);
         this.emailService.sendEmail(email, httpServletRequest);
         LOGGER.info("Email sent to {}", email);

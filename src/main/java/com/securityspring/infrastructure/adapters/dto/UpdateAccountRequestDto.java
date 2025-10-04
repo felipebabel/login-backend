@@ -1,5 +1,6 @@
 package com.securityspring.infrastructure.adapters.dto;
 
+import java.time.LocalDate;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -24,4 +25,22 @@ public class UpdateAccountRequestDto {
     private String name;
 
     private String language;
+
+    private String phone;
+
+    private String gender;
+
+    private LocalDate birthDate;
+
+    private String city;
+
+    private String state;
+
+    private String address;
+
+    private String addressComplement;
+
+    private String country;
+
+    private String zipCode;
 }

@@ -18,10 +18,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class CreateAccountRequestDto {
 
     @NotBlank(message = "Username cannot be blank")
-    @Pattern(
-            regexp = "^[a-zA-Z0-9._-]{3,20}$",
-            message = "Username can only contain letters, numbers, '.', '-' or '_' and must be 3-20 characters long"
-    )
     private String user;
 
     @NotBlank(message = "Password cannot be blank")
@@ -33,9 +29,8 @@ public class CreateAccountRequestDto {
     private String email;
 
     @NotBlank(message = "Name cannot be blank")
-    @Pattern(
-            regexp = "^[\\p{L}]+(?:[\\p{L}\\s'-]*[\\p{L}])?$",
-            message = "Name can only contain letters, spaces, hyphens and apostrophes"
-    )
     private String name;
+
+    private String language;
+
 }

@@ -1,5 +1,6 @@
 package com.securityspring.infrastructure.adapters.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import com.securityspring.application.service.api.ConfigServiceApi;
 import com.securityspring.domain.exception.ConfigNotFoundException;
 import com.securityspring.domain.model.ConfigEntity;
@@ -34,9 +35,10 @@ public class ConfigController implements ConfigApi {
     @PutMapping("set-config")
     public ResponseEntity<Object> setConfig(@RequestParam("configValue") final Long configValue,
                                                             @RequestParam("configDescription") final String configDescription,
-                                                            @RequestParam("userRequired") final Long userRequired) {
+                                                            @RequestParam("userRequired") final Long userRequired,
+                                                            final HttpServletRequest httpServletRequest) {
         ConfigEntity configEntity = this.configService.setConfig(configDescription, configValue.toString(),
-                userRequired);
+                userRequired, httpServletRequest);
         return new ResponseEntity<>(configEntity, HttpStatus.OK);
     }
 

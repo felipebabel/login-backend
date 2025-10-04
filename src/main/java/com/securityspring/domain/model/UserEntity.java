@@ -1,5 +1,6 @@
 package com.securityspring.domain.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.securityspring.domain.enums.GenderEnum;
 import com.securityspring.domain.enums.LanguagesEnum;
 import com.securityspring.domain.enums.RolesUserEnum;
 import com.securityspring.domain.enums.StatusEnum;
@@ -77,6 +79,34 @@ public class UserEntity {
 
     @Builder.Default
     @Column(name = "DT_PASSWORD_CHANGE", nullable = false)
-    private LocalDateTime passwordChangeDate = LocalDateTime.now();
+    private LocalDate passwordChangeDate = LocalDate.now();
+
+    @Column(name = "NR_PHONE", length = 20)
+    private String phone;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "DS_GENDER", length = 20)
+    private GenderEnum gender;
+
+    @Column(name = "DT_BIRTH")
+    private LocalDate birthDate;
+
+    @Column(name = "DS_CITY", length = 100)
+    private String city;
+
+    @Column(name = "DS_STATE", length = 100)
+    private String state;
+
+    @Column(name = "DS_ADDRESS", length = 255)
+    private String address;
+
+    @Column(name = "NR_ZIPCODE", length = 50)
+    private String zipCode;
+
+    @Column(name = "DS_COUNTRY", length = 50)
+    private String country;
+
+    @Column(name = "DS_ADDRESS_COMPLEMENT")
+    private String addressComplement;
 
 }

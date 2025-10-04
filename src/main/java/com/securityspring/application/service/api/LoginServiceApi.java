@@ -1,14 +1,17 @@
 package com.securityspring.application.service.api;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.Optional;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import com.securityspring.domain.enums.LanguagesEnum;
 import com.securityspring.domain.enums.RolesUserEnum;
 import com.securityspring.domain.enums.StatusEnum;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
+import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
 import org.springframework.data.domain.Page;
@@ -20,7 +23,8 @@ public interface LoginServiceApi {
                         final String email,
                         final String firstName,
                         final StatusEnum statusEnum,
-                        final RolesUserEnum role);
+                        final RolesUserEnum role,
+                        final LanguagesEnum languagesEnum);
 
     UserEntity updateUser(final UserEntity user,
                                  final UpdateAccountRequestDto account);
@@ -28,7 +32,8 @@ public interface LoginServiceApi {
     UserEntity inactiveAccount(final Long user,
                                final HttpServletRequest httpServletRequest);
 
-    UserEntity forcePasswordChange(final Long user);
+    UserEntity forcePasswordChange(final Long user,
+                                   final HttpServletRequest httpServletRequest);
 
     UserEntity getUserByUsername(final String username);
 
@@ -38,6 +43,8 @@ public interface LoginServiceApi {
 
     UserEntity login(final LoginRequestDto userEntity,
                     final HttpServletRequest httpServletRequest);
+
+    List<NewUsersPerMonthDTO> getNewAccountMonth();
 
     void createAccount(final CreateAccountRequestDto createAccount,
                        final HttpServletRequest httpServletRequest) throws MessagingException, UnsupportedEncodingException;
@@ -50,7 +57,8 @@ public interface LoginServiceApi {
                 final HttpServletRequest httpServletRequest);
 
     void updateLoginAttempt(final UserEntity userEntity,
-                            final int loginAttempt);
+                            final int loginAttempt,
+                            final String action);
 
     void updateLogin(final UserEntity userEntity,
                             final int loginAttempt);
@@ -90,9 +98,12 @@ public interface LoginServiceApi {
 
     TotalAccountVO getTotalAccount();
 
-    UserEntity activeUser(final Long user);
+    UserEntity activeUser(final Long user,
 
-    UserEntity blockUser(final Long user);
+                          final HttpServletRequest httpServletRequest);
+
+    UserEntity blockUser(final Long user,
+                         final HttpServletRequest httpServletRequest);
 
     void deleteUser(final Long user,
                     final HttpServletRequest httpServletRequest);
