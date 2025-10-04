@@ -19,11 +19,13 @@ public enum LanguagesEnum {
 
     public static LanguagesEnum fromString(final String role) {
         if (role == null) return EN;
-        try {
-            return LanguagesEnum.valueOf(role.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return EN;
+
+        for (LanguagesEnum lang : LanguagesEnum.values()) {
+            if (lang.getDescription().equalsIgnoreCase(role)) {
+                return lang;
+            }
         }
+        return EN;
     }
 
 }

@@ -8,12 +8,13 @@ import com.securityspring.domain.model.UserEntity;
 public interface EmailServiceApi {
 
     void sendEmail(final String to,
-                   final HttpServletRequest httpServletRequest);
+                   final HttpServletRequest httpServletRequest) throws MessagingException;
 
     UserEntity validateCode(final String code,
                       final String email,
                             final HttpServletRequest httpServletRequest);
 
 
-    void sendEmail(final UserEntity userEntity) throws MessagingException, UnsupportedEncodingException;
+    void sendEmail(final UserEntity userEntity,
+                   final HttpServletRequest httpServletRequest) throws MessagingException, UnsupportedEncodingException;
 }

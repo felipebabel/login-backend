@@ -1,5 +1,6 @@
 package com.securityspring.infrastructure.adapters.api;
 
+import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,7 +22,8 @@ public interface ConfigApi {
     })
     ResponseEntity<Object> setConfig(@RequestParam("configValue") final Long configValue,
                                      @RequestParam("configDescription") final String configDescription,
-                                     @RequestParam("userRequired") final Long userRequired);
+                                     @RequestParam("userRequired") final Long userRequired,
+                                     final HttpServletRequest httpServletRequest);
 
     @Operation(summary = "Login", description = "Validates user credentials and logs in the user.")
     @ApiResponses(value = {

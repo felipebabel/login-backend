@@ -1,11 +1,14 @@
 package com.securityspring.infrastructure.adapters.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import jakarta.transaction.Transactional;
 import com.securityspring.domain.enums.StatusEnum;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.domain.port.UserRepository;
+import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
+import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.dto.TotalAccountProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +49,8 @@ public interface DatabaseUserRepository extends UserRepository {
     TotalAccountProjection getTotalAccount();
 
     @Override
-    Page<UserEntity> findByStatus(final StatusEnum status,
+    @Query("SELECT u FROM UserEntity u WHERE u.status = :status AND u.role <> 'ADMIN'")
+    Page<UserEntity> findByStatus(@Param("status") final StatusEnum status,
                                   final Pageable pageable);
 
     @Modifying
@@ -82,11 +86,23 @@ public interface DatabaseUserRepository extends UserRepository {
     @Query("SELECT u FROM UserEntity u " +
             "WHERE (:userIdentifier IS NULL OR u.identifier = :userIdentifier) " +
             "AND (:username IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))) " +
-            "AND (:name IS NULL OR LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))) ")
+            "AND (:name IS NULL OR LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))) " +
+            "AND username <> 'admin'"
+    )
     Page<UserEntity> findByUsernameOrIdentifier(@Param("userIdentifier") final Long userIdentifier,
                                                 @Param("username") final String username,
                                                 @Param("name") final String name,
                                                 final Pageable pageable);
+
+    @Query(value = "SELECT EXTRACT(YEAR FROM DT_CREATION_USER) as year, " +
+            "EXTRACT(MONTH FROM DT_CREATION_USER) as month, " +
+            "COUNT(cd_identifier) as totalUsers " +
+            "FROM login_user " +
+            "GROUP BY EXTRACT(YEAR FROM DT_CREATION_USER), EXTRACT(MONTH FROM DT_CREATION_USER) " +
+            "ORDER BY EXTRACT(YEAR FROM DT_CREATION_USER), EXTRACT(MONTH FROM DT_CREATION_USER)",
+            nativeQuery = true)
+    List<Object[]> getNewAccountMonth();
+
 
 }
 

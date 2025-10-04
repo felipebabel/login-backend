@@ -1,14 +1,19 @@
 package com.securityspring.application.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.domain.port.LogRepository;
 import com.securityspring.domain.port.UserRepository;
+import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
 import com.securityspring.infrastructure.adapters.dto.LogDto;
+import com.securityspring.infrastructure.adapters.dto.LoginAttemptsCountDTO;
+import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.config.ProjectProperties;
 import com.securityspring.domain.model.LogsEntity;
 import org.slf4j.Logger;
@@ -19,7 +24,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
 
 @Service
 @Scope("prototype")
@@ -81,65 +85,72 @@ public class LogServiceImpl implements LogServiceApi {
     }
 
     @Override
-    public void setLog(final String action, final Long user)  {
-        Optional<UserEntity> userEntity = userRepository.findByIdentifier(user);
-        LogsEntity logsEntity = new LogsEntity();
-        logsEntity.setAction(action);
-        logsEntity.setDate(LocalDateTime.now());
-        logsEntity.setDescription("");
-        logsEntity.setIpAddress("");
-        userEntity.ifPresent(logsEntity::setUser);
-        this.logRepository.save(logsEntity);
+    public List<LoginAttemptsCountDTO> getLoginAttempts() {
+        List<Object[]> loginAttempts = this.logRepository.getLoginAttempts();
+        return loginAttempts.stream()
+                .map(r -> new LoginAttemptsCountDTO(
+                        ((String) r[0]),
+                        ((Number) r[1]).longValue()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<IpAccessDTO> getAccessesByCountry() {
+        return this.logRepository.getAccessesByCountry();
     }
 
     @Override
     public void setLog(final String action, final Long user,
                        final HttpServletRequest httpServletRequest)  {
         Optional<UserEntity> userEntity = userRepository.findByIdentifier(user);
-        if (userEntity.isPresent()) {
             LogsEntity logsEntity = new LogsEntity();
             logsEntity.setAction(action);
             logsEntity.setDate(LocalDateTime.now());
             logsEntity.setDescription("");
             logsEntity.setIpAddress(httpServletRequest.getRemoteAddr());
             logsEntity.setDeviceName(httpServletRequest.getHeader("User-Agent"));
-            logsEntity.setUser(userEntity.get());
+                 userEntity.ifPresent(logsEntity::setUser);
             this.logRepository.save(logsEntity);
-            return;
-        }
-        LOGGER.info("Not found user: {}", user);
-
     }
 
     @Override
     public void setLog(final String action, final Long user, final String description)  {
         Optional<UserEntity> userEntity = userRepository.findByIdentifier(user);
-        if (userEntity.isPresent()) {
             LogsEntity logsEntity = new LogsEntity();
             logsEntity.setAction(action);
             logsEntity.setDate(LocalDateTime.now());
             logsEntity.setDescription(description);
             logsEntity.setIpAddress("");
-            logsEntity.setUser(userEntity.get());
+        userEntity.ifPresent(logsEntity::setUser);
             this.logRepository.save(logsEntity);
-            return;
-        }
-        LOGGER.info("Not found user: {}", user);
 
     }
-
     @Override
-    public void setLog(final String action, final String description)  {
+    public void setLog(final String action, final Long username, final String description,
+                final HttpServletRequest httpServletRequest) {
         LogsEntity logsEntity = new LogsEntity();
         logsEntity.setAction(action);
         logsEntity.setDate(LocalDateTime.now());
         logsEntity.setDescription(description);
-        logsEntity.setIpAddress("");
+        logsEntity.setIpAddress(httpServletRequest.getRemoteAddr());
+        logsEntity.setDeviceName(httpServletRequest.getHeader("User-Agent"));
+        this.logRepository.save(logsEntity);
+    }
+
+    @Override
+    public void setLog(final String action, final String description,
+                       final HttpServletRequest httpServletRequest)  {
+        LogsEntity logsEntity = new LogsEntity();
+        logsEntity.setAction(action);
+        logsEntity.setDate(LocalDateTime.now());
+        logsEntity.setDescription(description);
+        logsEntity.setIpAddress(httpServletRequest.getRemoteAddr());
+        logsEntity.setDeviceName(httpServletRequest.getHeader("User-Agent"));
         this.logRepository.save(logsEntity);
     }
 
     @Override
     public int deleteOldLogs() {
-        return this.logRepository.deleteOldLogs(LocalDateTime.now().minusDays(30));
+        return this.logRepository.deleteOldLogs(LocalDateTime.now().minusDays(180));
     }
 }

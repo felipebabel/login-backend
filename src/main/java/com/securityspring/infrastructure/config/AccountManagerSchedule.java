@@ -29,7 +29,7 @@ public class AccountManagerSchedule {
     @Scheduled(cron = "0 0 6 * * ?", zone = "America/Sao_Paulo")
     public void runDailyDeletion() {
         LOGGER.info("Starting daily maintenance tasks at {}.", LocalDateTime.now());
-        LOGGER.info("Starting daily scheduled task to delete logs older than 30 days.");
+        LOGGER.info("Starting daily scheduled task to delete logs older than 180 days.");
         UserEntity userEntity = this.loginService.getUserByUsername("admin");
         int deletedCount = this.logService.deleteOldLogs();
         this.logService.setLog("DAILY SCHEDULE", userEntity.getIdentifier(), String.format("Daily log deletion completed. Total logs deleted: %d",

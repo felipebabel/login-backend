@@ -1,14 +1,18 @@
 package com.securityspring.infrastructure.adapters.controller;
 
+import java.util.List;
 import jakarta.servlet.http.HttpServletRequest;
 import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
 import com.securityspring.domain.enums.RolesUserEnum;
+import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.infrastructure.adapters.api.AdminApi;
+import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
 import com.securityspring.infrastructure.adapters.dto.LogDto;
+import com.securityspring.infrastructure.adapters.dto.LoginAttemptsCountDTO;
+import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
-import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,15 +34,15 @@ public class AdminController implements AdminApi {
 
     private final LoginServiceApi loginService;
 
-    private final LogServiceApi logServiceApi;
+    private final LogServiceApi logService;
 
     static final Logger LOGGER = LoggerFactory.getLogger(AdminController.class);
 
     @Autowired
     public AdminController(final LoginServiceApi loginService1,
-                           final LogServiceApi logServiceApi) {
+                           final LogServiceApi logService) {
         this.loginService = loginService1;
-        this.logServiceApi = logServiceApi;
+        this.logService = logService;
     }
 
     @Override
@@ -64,7 +68,7 @@ public class AdminController implements AdminApi {
                                                     @RequestParam(required = false) String username,
                                                   @RequestParam(required = false) String action
                                             ) {
-        final Page<LogDto> users = logServiceApi.getLogs(page, size, sortBy, direction, userIdentifier, action, username);
+        final Page<LogDto> users = logService.getLogs(page, size, sortBy, direction, userIdentifier, action, username);
         LOGGER.info(users.isEmpty()
                 ? "Get pending account returned no content"
                 : "Get pending account successful");
@@ -149,16 +153,18 @@ public class AdminController implements AdminApi {
 
     @Override
     @PutMapping("allow-user")
-    public ResponseEntity<Object> activeUser(@RequestParam("user") Long userIdentifier) {
-        UserEntity users = loginService.activeUser(userIdentifier);
+    public ResponseEntity<Object> activeUser(@RequestParam("user") Long userIdentifier,
+                                             final HttpServletRequest httpServletRequest) {
+        UserEntity users = loginService.activeUser(userIdentifier, httpServletRequest);
         LOGGER.info("User account activated successful");
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
     @Override
     @PutMapping("block-user")
-    public ResponseEntity<Object> blockUser(@RequestParam("user") Long userIdentifier) {
-        UserEntity userEntityBlocked = loginService.blockUser(userIdentifier);
+    public ResponseEntity<Object> blockUser(@RequestParam("user") Long userIdentifier,
+                                             final HttpServletRequest httpServletRequest) {
+        UserEntity userEntityBlocked = loginService.blockUser(userIdentifier, httpServletRequest);
         LOGGER.info("User blocked successful");
         return new ResponseEntity<>(userEntityBlocked, HttpStatus.OK);
     }
@@ -183,8 +189,9 @@ public class AdminController implements AdminApi {
 
     @Override
     @PutMapping("force-password-change")
-    public ResponseEntity<Object> forcePasswordChange(@RequestParam("user") Long userIdentifier) {
-        UserEntity userEntity = loginService.forcePasswordChange(userIdentifier);
+    public ResponseEntity<Object> forcePasswordChange(@RequestParam("user") Long userIdentifier,
+                                             final HttpServletRequest httpServletRequest) {
+        UserEntity userEntity = loginService.forcePasswordChange(userIdentifier, httpServletRequest);
         //todo invalidate token session
         LOGGER.info("Force password change for user {} successful", userIdentifier);
         return new ResponseEntity<>(userEntity, HttpStatus.OK);
@@ -220,4 +227,33 @@ public class AdminController implements AdminApi {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
+    @Override
+    @GetMapping("get-login-attempts")
+    public ResponseEntity<Object> getLoginAttempts() {
+        final List<LoginAttemptsCountDTO> loginAttempts = logService.getLoginAttempts();
+        LOGGER.info(loginAttempts.isEmpty()
+                ? "Get login attempts returned no content"
+                : "Get login attempts successful");
+        return new ResponseEntity<>(loginAttempts, HttpStatus.OK);
+    }
+
+    @Override
+    @GetMapping("get-new-account-month")
+    public ResponseEntity<Object> getNewAccountMonth() {
+        final List<NewUsersPerMonthDTO> newUsersPerMonth = loginService.getNewAccountMonth();
+        LOGGER.info(newUsersPerMonth.isEmpty()
+                ? "Get new users per month returned no content"
+                : "Get new users per month successful");
+        return new ResponseEntity<>(newUsersPerMonth, HttpStatus.OK);
+    }
+
+    @Override
+    @GetMapping("get-login-accesses-by-country")
+    public ResponseEntity<Object> getAccessesByCountry() {
+        final List<IpAccessDTO> ipAccess = logService.getAccessesByCountry();
+        LOGGER.info(ipAccess.isEmpty()
+                ? "Get accesses by country returned no content"
+                : "Get accesses by country successful");
+        return new ResponseEntity<>(ipAccess, HttpStatus.OK);
+    }
 }

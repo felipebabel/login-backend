@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
@@ -14,10 +15,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -32,7 +31,7 @@ public interface LoginApi {
         })
         @PostMapping("/login")
         ResponseEntity<Object> login(@Valid @RequestBody final LoginRequestDto loginRequest,
-                                     final HttpServletRequest httpServletRequest) throws BadRequestException ;
+                                     final HttpServletRequest httpServletRequest) throws BadRequestException, InterruptedException;
 
         @Operation(summary = "Create Account", description = "Creates a new user account with encrypted password.")
         @ApiResponses(value = {
@@ -69,7 +68,7 @@ public interface LoginApi {
                 @ApiResponse(responseCode = "400", description = "User already exists") //TODO FIX
         })
         ResponseEntity<Object> sendEmail(@RequestParam("email") String email,
-                                         final HttpServletRequest httpServletRequest);
+                                         final HttpServletRequest httpServletRequest) throws MessagingException;
 
         @Operation(summary = "Create Account", description = "Creates a new user account with encrypted password.") //TODO FIX
         @ApiResponses(value = {
