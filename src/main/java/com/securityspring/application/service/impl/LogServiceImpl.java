@@ -10,10 +10,8 @@ import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.domain.port.LogRepository;
 import com.securityspring.domain.port.UserRepository;
-import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
 import com.securityspring.infrastructure.adapters.dto.LogDto;
 import com.securityspring.infrastructure.adapters.dto.LoginAttemptsCountDTO;
-import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.config.ProjectProperties;
 import com.securityspring.domain.model.LogsEntity;
 import org.slf4j.Logger;
@@ -92,11 +90,6 @@ public class LogServiceImpl implements LogServiceApi {
                         ((String) r[0]),
                         ((Number) r[1]).longValue()))
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<IpAccessDTO> getAccessesByCountry() {
-        return this.logRepository.getAccessesByCountry();
     }
 
     @Override

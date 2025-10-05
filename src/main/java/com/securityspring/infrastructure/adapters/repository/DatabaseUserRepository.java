@@ -7,8 +7,6 @@ import jakarta.transaction.Transactional;
 import com.securityspring.domain.enums.StatusEnum;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.domain.port.UserRepository;
-import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
-import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.dto.TotalAccountProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

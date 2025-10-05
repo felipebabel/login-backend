@@ -14,6 +14,7 @@ import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
+import com.securityspring.infrastructure.adapters.vo.UserVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -45,8 +46,8 @@ public class LoginController implements LoginApi {
     @PostMapping
     public ResponseEntity<Object> login(@Valid @RequestBody final LoginRequestDto loginRequestDto,
                                         final HttpServletRequest httpServletRequest) throws InterruptedException {
-        final UserEntity userEntity = loginService.login(loginRequestDto, httpServletRequest);
-        return new ResponseEntity<>(userEntity, HttpStatus.OK);
+        final UserVO user = loginService.login(loginRequestDto, httpServletRequest);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @Override
@@ -98,9 +99,7 @@ public class LoginController implements LoginApi {
                                                @RequestParam("email") final String email,
                                                final HttpServletRequest httpServletRequest) {
         LOGGER.info("Validate code for {}", email);
-        final UserEntity userEntity = this.emailService.validateCode(code, email, httpServletRequest);
-        this.loginService.updateUserStatus(StatusEnum.ACTIVE, userEntity);
-
+        this.emailService.validateCode(code, email, httpServletRequest);
         LOGGER.info("Code validate successfully for {}", email);
         return ResponseEntity.noContent().build();
     }

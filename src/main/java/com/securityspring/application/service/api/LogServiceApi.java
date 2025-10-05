@@ -2,7 +2,6 @@ package com.securityspring.application.service.api;
 
 import java.util.List;
 import jakarta.servlet.http.HttpServletRequest;
-import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
 import com.securityspring.infrastructure.adapters.dto.LogDto;
 import com.securityspring.infrastructure.adapters.dto.LoginAttemptsCountDTO;
 import org.springframework.data.domain.Page;
@@ -10,8 +9,6 @@ import org.springframework.data.domain.Page;
 public interface LogServiceApi {
 
     List<LoginAttemptsCountDTO> getLoginAttempts();
-
-    List<IpAccessDTO> getAccessesByCountry();
 
     void setLog(final String action, final Long username, final String description);
 
