@@ -5,6 +5,7 @@ import com.securityspring.application.service.api.ConfigServiceApi;
 import com.securityspring.domain.exception.ConfigNotFoundException;
 import com.securityspring.domain.model.ConfigEntity;
 import com.securityspring.infrastructure.adapters.api.ConfigApi;
+import com.securityspring.infrastructure.adapters.vo.ConfigVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,17 +38,17 @@ public class ConfigController implements ConfigApi {
                                                             @RequestParam("configDescription") final String configDescription,
                                                             @RequestParam("userRequired") final Long userRequired,
                                                             final HttpServletRequest httpServletRequest) {
-        ConfigEntity configEntity = this.configService.setConfig(configDescription, configValue.toString(),
+        ConfigVO config = this.configService.setConfig(configDescription, configValue.toString(),
                 userRequired, httpServletRequest);
-        return new ResponseEntity<>(configEntity, HttpStatus.OK);
+        return new ResponseEntity<>(config, HttpStatus.OK);
     }
 
     @Override
     @GetMapping("get-config")
-    public ResponseEntity<Object> getPasswordExpiry(@RequestParam("configDescription") final String configDescription) throws ConfigNotFoundException {
-        ConfigEntity configEntity = this.configService.getConfig(configDescription);
+    public ResponseEntity<Object> getConfig(@RequestParam("configDescription") final String configDescription) throws ConfigNotFoundException {
+        ConfigVO config = this.configService.getConfig(configDescription);
         LOGGER.info("Get password expiry successfully.");
-        return new ResponseEntity<>(configEntity, HttpStatus.OK);
+        return new ResponseEntity<>(config, HttpStatus.OK);
     }
 
 

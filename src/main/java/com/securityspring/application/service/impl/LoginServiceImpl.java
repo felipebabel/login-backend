@@ -32,18 +32,20 @@ import com.securityspring.domain.model.UserEntity;
 import com.securityspring.domain.port.ConfigRepository;
 import com.securityspring.domain.port.UserRepository;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
-import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
 import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.dto.TotalAccountProjection;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
+import com.securityspring.infrastructure.adapters.mapper.UserMapper;
 import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
+import com.securityspring.infrastructure.adapters.vo.UserVO;
 import com.securityspring.infrastructure.config.ProjectProperties;
 import com.securityspring.infrastructure.config.TokenJwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -142,7 +144,7 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
-    public UserEntity inactiveAccount(final Long user,
+    public UserVO inactiveAccount(final Long user,
                                       final HttpServletRequest httpServletRequest) {
         final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
         if (userEntity.isPresent()) {
@@ -150,14 +152,14 @@ public class LoginServiceImpl implements LoginServiceApi {
             this.userRepository.save(userEntity.get());
             LOGGER.info("User inactivated: Id: {}", userEntity.get().getIdentifier());
             this.logService.setLog("INACTIVATE ACCOUNT", user, httpServletRequest);
-            return userEntity.get();
+            return UserMapper.toVO(userEntity.get());
         } else {
             throw new UserNotFoundException("User not found to inactive: " + user);
         }
     }
 
     @Override
-    public UserEntity forcePasswordChange(final Long user,
+    public UserVO forcePasswordChange(final Long user,
                                           final HttpServletRequest httpServletRequest) {
         final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
         if (userEntity.isPresent()) {
@@ -165,27 +167,27 @@ public class LoginServiceImpl implements LoginServiceApi {
             this.userRepository.save(userEntity.get());
             LOGGER.info("User forced to change password: Id: {}", user);
             this.logService.setLog("FORCED CHANGE PASSWORD", user, "User forced to change password.", httpServletRequest);
-            return userEntity.get();
+            return UserMapper.toVO(userEntity.get());
         } else {
             throw new UserNotFoundException("User not found to force change password: " + user);
         }
     }
 
     @Override
-    public UserEntity getUserByUsername(final String username) {
+    public UserVO getUserByUsername(final String username) {
         final Optional<UserEntity> userEntity = this.userRepository.findByUsername(username);
         if (userEntity.isPresent()) {
-            return userEntity.get();
+            return UserMapper.toVO(userEntity.get());
         } else {
             throw new UserNotFoundException("User not found. Username: " + username);
         }
     }
 
     @Override
-    public UserEntity getUserByName(final String name) {
+    public UserVO getUserByName(final String name) {
         final Optional<UserEntity> userEntity = this.userRepository.findByUsername(name);
         if (userEntity.isPresent()) {
-            return userEntity.get();
+            return UserMapper.toVO(userEntity.get());
         } else {
             throw new UserNotFoundException("User not found. Name: " + name);
         }
@@ -197,8 +199,8 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
-    public UserEntity login(final LoginRequestDto loginRequestDto,
-                            final HttpServletRequest httpServletRequest) {
+    public UserVO login(final LoginRequestDto loginRequestDto,
+                        final HttpServletRequest httpServletRequest) {
         String username = loginRequestDto.getUser().trim();
         UserEntity user = findUser(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
@@ -206,7 +208,7 @@ public class LoginServiceImpl implements LoginServiceApi {
         switch (user.getStatus()) {
             case PENDING -> {
                 logService.setLog(
-                        "LOGIN ATTEMPT",
+                        "LOGIN ATTEMPT FAILED",
                         user.getIdentifier(),
                         String.format("Login attempt with status PENDING for user: %s", username)
                 );
@@ -214,7 +216,7 @@ public class LoginServiceImpl implements LoginServiceApi {
             }
             case BLOCKED -> {
                 logService.setLog(
-                        "LOGIN ATTEMPT",
+                        "LOGIN ATTEMPT FAILED",
                         user.getIdentifier(),
                         String.format("Login attempt with status BLOCKED for user: %s", username)
                 );
@@ -222,7 +224,7 @@ public class LoginServiceImpl implements LoginServiceApi {
             }
             case INACTIVE -> {
                 logService.setLog(
-                        "LOGIN ATTEMPT",
+                        "LOGIN ATTEMPT FAILED",
                         user.getIdentifier(),
                         String.format("Login attempt with status INACTIVE for user: %s", username)
                 );
@@ -245,7 +247,7 @@ public class LoginServiceImpl implements LoginServiceApi {
         updateLoginAttempt(user, 0, "LOGIN ATTEMPT OK");
         updateLogin(user, 0);
         this.logService.setLog("LOGIN ACCOUNT", user.getIdentifier(), httpServletRequest);
-        return user;
+        return UserMapper.toVO(user);
     }
 
 
@@ -338,7 +340,7 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
-    public UserEntity activeUser(final Long user,
+    public UserVO activeUser(final Long user,
                                  final HttpServletRequest httpServletRequest) {
         final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
         if (userEntity.isPresent()) {
@@ -346,14 +348,14 @@ public class LoginServiceImpl implements LoginServiceApi {
             this.userRepository.save(userEntity.get());
             LOGGER.info("User activated: Id: {}", userEntity.get().getIdentifier());
             this.logService.setLog("ACTIVATED ACCOUNT", user, httpServletRequest);
-            return userEntity.get();
+            return UserMapper.toVO(userEntity.get());
         } else {
             throw new UserNotFoundException("User not found to active: " + user);
         }
     }
 
     @Override
-    public UserEntity blockUser(final Long user,
+    public UserVO blockUser(final Long user,
                                 final HttpServletRequest httpServletRequest) {
         final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
         if (userEntity.isPresent()) {
@@ -361,7 +363,7 @@ public class LoginServiceImpl implements LoginServiceApi {
             this.userRepository.save(userEntity.get());
             LOGGER.info("User blocked: Id: {}", userEntity.get().getIdentifier());
             this.logService.setLog("BLOCKED ACCOUNT", user, httpServletRequest);
-            return userEntity.get();
+            return UserMapper.toVO(userEntity.get());
         } else {
             throw new UserNotFoundException("User not found to block: " + user);
         }
@@ -395,7 +397,7 @@ public class LoginServiceImpl implements LoginServiceApi {
 
 
     @Override
-    public Page<UserEntity> getPendingUsers(final int page,
+    public Page<UserVO> getPendingUsers(final int page,
                                             final int size,
                                             final String sortBy,
                                             final String direction) {
@@ -404,12 +406,18 @@ public class LoginServiceImpl implements LoginServiceApi {
                 Sort.by(sortBy).ascending();
 
         final Pageable pageable = PageRequest.of(page, size, sort);
-
-        return this.userRepository.findByStatus(StatusEnum.PENDING, pageable);
+        Page<UserEntity> userList = this.userRepository.findByStatus(StatusEnum.PENDING, pageable);
+        return new PageImpl<>(
+                userList.getContent().stream()
+                        .map(UserMapper::toVO)
+                        .toList(),
+                pageable,
+                userList.getTotalElements()
+        );
     }
 
     @Override
-    public Page<UserEntity> getActiveSessions(final int page,
+    public Page<UserVO> getActiveSessions(final int page,
                                               final int size,
                                               final String sortBy,
                                               final String direction) {
@@ -419,11 +427,18 @@ public class LoginServiceImpl implements LoginServiceApi {
 
         final Pageable pageable = PageRequest.of(page, size, sort);
 
-        return this.userRepository.findByActiveSession(StatusEnum.ACTIVE, pageable);
+        Page<UserEntity> userList = this.userRepository.findByActiveSession(StatusEnum.ACTIVE, pageable);
+        return new PageImpl<>(
+                userList.getContent().stream()
+                        .map(UserMapper::toVO)
+                        .toList(),
+                pageable,
+                userList.getTotalElements()
+        );
     }
 
     @Override
-    public Page<UserEntity> getBlockedUsers(final int page,
+    public Page<UserVO> getBlockedUsers(final int page,
                                             final int size,
                                             final String sortBy,
                                             final String direction) {
@@ -433,11 +448,18 @@ public class LoginServiceImpl implements LoginServiceApi {
 
         final Pageable pageable = PageRequest.of(page, size, sort);
 
-        return this.userRepository.findByStatus(StatusEnum.BLOCKED, pageable);
+        Page<UserEntity> userList = this.userRepository.findByStatus(StatusEnum.BLOCKED, pageable);
+        return new PageImpl<>(
+                userList.getContent().stream()
+                        .map(UserMapper::toVO)
+                        .toList(),
+                pageable,
+                userList.getTotalElements()
+        );
     }
 
     @Override
-    public UserEntity updateUserRole(final Long userIdentifier,
+    public UserVO updateUserRole(final Long userIdentifier,
                                      final RolesUserEnum role,
                                      final Long userRequested,
                                      final HttpServletRequest httpServletRequest) {
@@ -449,14 +471,14 @@ public class LoginServiceImpl implements LoginServiceApi {
             LOGGER.info("Updated role: {} for user: {} by user: {} ", role.getDescription(), userIdentifier, userRequested);
             this.logService.setLog("UPDATED ROLE", userIdentifier, String.format(
                     "Updated role %s for user: %d by user: %d", role.getDescription(), userIdentifier, userRequested), httpServletRequest);
-            return user.get();
+            return UserMapper.toVO(user.get());
         } else {
             throw new UserNotFoundException("User not found. User: " + userIdentifier);
         }
     }
 
     @Override
-    public Page<UserEntity> getInactiveUsers(final int page,
+    public Page<UserVO> getInactiveUsers(final int page,
                                              final int size,
                                              final String sortBy,
                                              final String direction) {
@@ -466,11 +488,18 @@ public class LoginServiceImpl implements LoginServiceApi {
 
         final Pageable pageable = PageRequest.of(page, size, sort);
 
-        return this.userRepository.findByStatus(StatusEnum.INACTIVE, pageable);
+        Page<UserEntity> userList = this.userRepository.findByStatus(StatusEnum.INACTIVE, pageable);
+        return new PageImpl<>(
+                userList.getContent().stream()
+                        .map(UserMapper::toVO)
+                        .toList(),
+                pageable,
+                userList.getTotalElements()
+        );
     }
 
     @Override
-    public Page<UserEntity> getUsers(final int page,
+    public Page<UserVO> getUsers(final int page,
                                      final int size,
                                      final String sortBy,
                                      final String direction,
@@ -489,11 +518,18 @@ public class LoginServiceImpl implements LoginServiceApi {
         }
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return this.userRepository.findByUsernameOrIdentifier(userIdentifier, username, name, pageable);
+        Page<UserEntity> userList = this.userRepository.findByUsernameOrIdentifier(userIdentifier, username, name, pageable);
+        return new PageImpl<>(
+                userList.getContent().stream()
+                        .map(UserMapper::toVO)
+                        .toList(),
+                pageable,
+                userList.getTotalElements()
+        );
     }
 
     @Override
-    public Page<UserEntity> getActiveUsers(final int page,
+    public Page<UserVO> getActiveUsers(final int page,
                                            final int size,
                                            final String sortBy,
                                            final String direction) {
@@ -503,7 +539,14 @@ public class LoginServiceImpl implements LoginServiceApi {
 
         final Pageable pageable = PageRequest.of(page, size, sort);
 
-        return this.userRepository.findByStatus(StatusEnum.ACTIVE, pageable);
+        Page<UserEntity> userList = this.userRepository.findByStatus(StatusEnum.ACTIVE, pageable);
+        return new PageImpl<>(
+                userList.getContent().stream()
+                        .map(UserMapper::toVO)
+                        .toList(),
+                pageable,
+                userList.getTotalElements()
+        );
     }
 
     @Override
@@ -582,10 +625,11 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
-    public void updateUserStatus(final StatusEnum statusEnum,
+    public UserVO updateUserStatus(final StatusEnum statusEnum,
                                  final UserEntity user) {
         user.setStatus(statusEnum);
         this.userRepository.save(user);
+        return UserMapper.toVO(user);
     }
 
 }

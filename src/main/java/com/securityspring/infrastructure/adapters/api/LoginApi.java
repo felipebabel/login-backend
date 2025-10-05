@@ -33,7 +33,7 @@ public interface LoginApi {
         ResponseEntity<Object> login(@Valid @RequestBody final LoginRequestDto loginRequest,
                                      final HttpServletRequest httpServletRequest) throws BadRequestException, InterruptedException;
 
-        @Operation(summary = "Create Account", description = "Creates a new user account with encrypted password.")
+        @Operation(summary = "Create Account", description = "Creates a new user account with encrypted password and sends confirmation email.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Account created successfully",
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
@@ -42,50 +42,49 @@ public interface LoginApi {
         ResponseEntity<Object> createAccount(@Valid @RequestBody final CreateAccountRequestDto createAccount,
                                              final HttpServletRequest httpServletRequest) throws BadRequestException, MessagingException, UnsupportedEncodingException;
 
-        @Operation(summary = "Create Account", description = "Creates a new user account with encrypted password.")
+        @Operation(summary = "Update Account", description = "Updates user account information.")
         @ApiResponses(value = {
-                @ApiResponse(responseCode = "200", description = "Account created successfully",
+                @ApiResponse(responseCode = "200", description = "Account updated successfully",
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-                @ApiResponse(responseCode = "400", description = "User already exists")
+                @ApiResponse(responseCode = "400", description = "Update failed due to invalid data or user not found")
         })
         ResponseEntity<Object> updateAccount(@RequestParam("user") final Long userIdentifier,
                                              @Valid @RequestBody final UpdateAccountRequestDto createAccount,
                                              final HttpServletRequest httpServletRequest) throws BadRequestException, MessagingException, UnsupportedEncodingException;
 
-        @Operation(summary = "Create Account", description = "Creates a new user account with encrypted password.") //TODO FIX
+        @Operation(summary = "Logout", description = "Logs out the specified user.")
         @ApiResponses(value = {
-                @ApiResponse(responseCode = "200", description = "Account created successfully", //TODO FIX
+                @ApiResponse(responseCode = "200", description = "Logout successful",
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-                @ApiResponse(responseCode = "400", description = "User already exists") //TODO FIX
+                @ApiResponse(responseCode = "400", description = "Logout failed, user not found")
         })
         ResponseEntity<Object> logout(@RequestParam("user") Long userIdentifier,
                                       final HttpServletRequest httpServletRequest) throws BadRequestException;
 
-        @Operation(summary = "Create Account", description = "Creates a new user account with encrypted password.") //TODO FIX
+        @Operation(summary = "Send Email", description = "Sends a confirmation or reset email to the specified address.")
         @ApiResponses(value = {
-                @ApiResponse(responseCode = "200", description = "Account created successfully", //TODO FIX
+                @ApiResponse(responseCode = "200", description = "Email sent successfully",
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-                @ApiResponse(responseCode = "400", description = "User already exists") //TODO FIX
+                @ApiResponse(responseCode = "400", description = "Failed to send email")
         })
         ResponseEntity<Object> sendEmail(@RequestParam("email") String email,
                                          final HttpServletRequest httpServletRequest) throws MessagingException;
 
-        @Operation(summary = "Create Account", description = "Creates a new user account with encrypted password.") //TODO FIX
+        @Operation(summary = "Validate Code", description = "Validates a confirmation or password reset code sent via email.")
         @ApiResponses(value = {
-                @ApiResponse(responseCode = "200", description = "Account created successfully", //TODO FIX
+                @ApiResponse(responseCode = "200", description = "Code validated successfully",
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-                @ApiResponse(responseCode = "400", description = "User already exists") //TODO FIX
+                @ApiResponse(responseCode = "400", description = "Invalid or expired code")
         })
         ResponseEntity<Object> validateCode(@RequestParam("code") final String code,
                                             @RequestParam("email") final String email,
                                             final HttpServletRequest httpServletRequest) throws BadRequestException;
 
-
-        @Operation(summary = "Create Account", description = "Creates a new user account with encrypted password.") //TODO FIX
+        @Operation(summary = "Reset Password", description = "Resets the user password using email or user identifier.")
         @ApiResponses(value = {
-                @ApiResponse(responseCode = "200", description = "Account created successfully", //TODO FIX
+                @ApiResponse(responseCode = "200", description = "Password reset successfully",
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-                @ApiResponse(responseCode = "400", description = "User already exists") //TODO FIX
+                @ApiResponse(responseCode = "400", description = "Failed to reset password due to invalid data")
         })
         ResponseEntity<Object> resetPassword(@RequestParam("newPassword") final String newPassword,
                                              @RequestParam(value = "email", required = false) final String email,

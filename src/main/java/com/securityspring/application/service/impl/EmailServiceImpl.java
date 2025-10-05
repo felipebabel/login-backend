@@ -9,6 +9,7 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import com.securityspring.application.service.api.EmailServiceApi;
 import com.securityspring.application.service.api.LogServiceApi;
+import com.securityspring.application.service.api.LoginServiceApi;
 import com.securityspring.domain.enums.StatusEnum;
 import com.securityspring.domain.exception.CodeNotValidOrExpiredException;
 import com.securityspring.domain.exception.UserNotFoundException;
@@ -16,6 +17,8 @@ import com.securityspring.domain.model.PasswordResetTokenEntity;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.domain.port.PasswordResetTokenRepository;
 import com.securityspring.domain.port.UserRepository;
+import com.securityspring.infrastructure.adapters.mapper.UserMapper;
+import com.securityspring.infrastructure.adapters.vo.UserVO;
 import com.securityspring.infrastructure.config.ProjectProperties;
 import com.securityspring.infrastructure.config.TokenJwtUtil;
 import org.slf4j.Logger;
@@ -44,16 +47,21 @@ public class EmailServiceImpl implements EmailServiceApi {
 
     private final LogServiceApi logService;
 
+    private final LoginServiceApi loginService;
+
     @Autowired
-    public EmailServiceImpl(final ProjectProperties projectProperties, final TokenJwtUtil tokenJwtUtil,
+    public EmailServiceImpl(final ProjectProperties projectProperties,
+                            final TokenJwtUtil tokenJwtUtil,
                             final PasswordResetTokenRepository repository,
                             final UserRepository userRepository,
-                            final LogServiceApi logService) {
+                            final LogServiceApi logService,
+                            final LoginServiceApi loginService) {
         this.projectProperties = projectProperties;
         this.tokenJwtUtil = tokenJwtUtil;
         this.passwordResetTokenRepository = repository;
         this.userRepository = userRepository;
         this.logService = logService;
+        this.loginService = loginService;
     }
 
     @Override
@@ -119,9 +127,9 @@ public class EmailServiceImpl implements EmailServiceApi {
     }
 
     @Override
-    public UserEntity validateCode(final String code,
-                             final String email,
-                                   final HttpServletRequest httpServletRequest) {
+    public UserVO validateCode(final String code,
+                               final String email,
+                               final HttpServletRequest httpServletRequest) {
         LOGGER.info("Validating code");
         final UserEntity userEntity = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
@@ -132,7 +140,7 @@ public class EmailServiceImpl implements EmailServiceApi {
         this.passwordResetTokenRepository.save(token);
         this.logService.setLog("CODE VALIDATED", String.format("Code validate for email: %s", userEntity.getEmail()),
                 httpServletRequest);
-        return userEntity;
+        return this.loginService.updateUserStatus(StatusEnum.ACTIVE, userEntity);
     }
 
     private void saveToken(final String code, final UserEntity userEntity) {

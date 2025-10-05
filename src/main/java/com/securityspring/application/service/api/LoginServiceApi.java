@@ -14,6 +14,7 @@ import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
 import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
+import com.securityspring.infrastructure.adapters.vo.UserVO;
 import org.springframework.data.domain.Page;
 
 public interface LoginServiceApi {
@@ -29,20 +30,20 @@ public interface LoginServiceApi {
     UserEntity updateUser(final UserEntity user,
                                  final UpdateAccountRequestDto account);
 
-    UserEntity inactiveAccount(final Long user,
+    UserVO inactiveAccount(final Long user,
                                final HttpServletRequest httpServletRequest);
 
-    UserEntity forcePasswordChange(final Long user,
+    UserVO forcePasswordChange(final Long user,
                                    final HttpServletRequest httpServletRequest);
 
-    UserEntity getUserByUsername(final String username);
+    UserVO getUserByUsername(final String username);
 
-    UserEntity getUserByName(final String name);
+    UserVO getUserByName(final String name);
 
     Optional<UserEntity> findUser(final String user);
 
-    UserEntity login(final LoginRequestDto userEntity,
-                    final HttpServletRequest httpServletRequest);
+    UserVO login(final LoginRequestDto userEntity,
+                 final HttpServletRequest httpServletRequest);
 
     List<NewUsersPerMonthDTO> getNewAccountMonth();
 
@@ -63,32 +64,32 @@ public interface LoginServiceApi {
     void updateLogin(final UserEntity userEntity,
                             final int loginAttempt);
 
-    Page<UserEntity> getPendingUsers(final int page,
+    Page<UserVO> getPendingUsers(final int page,
                                      final int size,
                                      final String sortBy,
                                      final String direction);
 
-    Page<UserEntity> getActiveSessions(final int page,
+    Page<UserVO> getActiveSessions(final int page,
                                      final int size,
                                      final String sortBy,
                                      final String direction);
 
-    Page<UserEntity> getBlockedUsers(final int page,
+    Page<UserVO> getBlockedUsers(final int page,
                                      final int size,
                                      final String sortBy,
                                      final String direction);
 
-    UserEntity updateUserRole(final Long userIdentifier,
+    UserVO updateUserRole(final Long userIdentifier,
                               final RolesUserEnum role,
                               final Long userRequested,
                               final HttpServletRequest httpServletRequest);
 
-    Page<UserEntity> getInactiveUsers(final int page,
+    Page<UserVO> getInactiveUsers(final int page,
                                      final int size,
                                      final String sortBy,
                                      final String direction);
 
-    Page<UserEntity> getUsers(final int page,
+    Page<UserVO> getUsers(final int page,
                                       final int size,
                                       final String sortBy,
                                       final String direction,
@@ -98,18 +99,18 @@ public interface LoginServiceApi {
 
     TotalAccountVO getTotalAccount();
 
-    UserEntity activeUser(final Long user,
+    UserVO activeUser(final Long user,
 
                           final HttpServletRequest httpServletRequest);
 
-    UserEntity blockUser(final Long user,
+    UserVO blockUser(final Long user,
                          final HttpServletRequest httpServletRequest);
 
     void deleteUser(final Long user,
                     final HttpServletRequest httpServletRequest);
 
 
-    Page<UserEntity> getActiveUsers(final int page,
+    Page<UserVO> getActiveUsers(final int page,
                                     final int size,
                                     final String sortBy,
                                     final String direction);
@@ -125,7 +126,7 @@ public interface LoginServiceApi {
                        final String user,
                        final HttpServletRequest httpServletRequest);
 
-    void updateUserStatus(final StatusEnum statusEnum,
+    UserVO updateUserStatus(final StatusEnum statusEnum,
                        final UserEntity user);
 
 }

@@ -8,11 +8,11 @@ import com.securityspring.domain.enums.RolesUserEnum;
 import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.domain.model.UserEntity;
 import com.securityspring.infrastructure.adapters.api.AdminApi;
-import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
 import com.securityspring.infrastructure.adapters.dto.LogDto;
 import com.securityspring.infrastructure.adapters.dto.LoginAttemptsCountDTO;
 import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
+import com.securityspring.infrastructure.adapters.vo.UserVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +51,7 @@ public class AdminController implements AdminApi {
                                                     @RequestParam(defaultValue = "10") int size,
                                                     @RequestParam(defaultValue = "creationUserDate") String sortBy,
                                                     @RequestParam(defaultValue = "asc") String direction) {
-        final Page<UserEntity> users = loginService.getPendingUsers(page, size, sortBy, direction);
+        final Page<UserVO> users = loginService.getPendingUsers(page, size, sortBy, direction);
         LOGGER.info(users.isEmpty()
                 ? "Get pending account returned no content"
                 : "Get pending account successful");
@@ -81,7 +81,7 @@ public class AdminController implements AdminApi {
                                                    @RequestParam(defaultValue = "10") int size,
                                                    @RequestParam(defaultValue = "creationUserDate") String sortBy,
                                                    @RequestParam(defaultValue = "asc") String direction) {
-        final Page<UserEntity> users = loginService.getActiveUsers(page, size, sortBy, direction);
+        final Page<UserVO> users = loginService.getActiveUsers(page, size, sortBy, direction);
         LOGGER.info(users.isEmpty()
                 ? "Get active account returned no content"
                 : "Get active account successful");
@@ -94,7 +94,7 @@ public class AdminController implements AdminApi {
                                                     @RequestParam(defaultValue = "10") int size,
                                                     @RequestParam(defaultValue = "creationUserDate") String sortBy,
                                                     @RequestParam(defaultValue = "asc") String direction) {
-        final Page<UserEntity> users = loginService.getBlockedUsers(page, size, sortBy, direction);
+        final Page<UserVO> users = loginService.getBlockedUsers(page, size, sortBy, direction);
         LOGGER.info(users.isEmpty()
                 ? "Get blocked account returned no content"
                 : "Get blocked account successful");
@@ -110,7 +110,7 @@ public class AdminController implements AdminApi {
                                            @RequestParam(required = false) Long userIdentifier,
                                            @RequestParam(required = false) String username,
                                            @RequestParam(required = false) String name) {
-        final Page<UserEntity> users = loginService.getUsers(page, size, sortBy, direction, userIdentifier, username, name);
+        final Page<UserVO> users = loginService.getUsers(page, size, sortBy, direction, userIdentifier, username, name);
         LOGGER.info(users.isEmpty()
                 ? "Get blocked account returned no content"
                 : "Get blocked account successful");
@@ -126,7 +126,7 @@ public class AdminController implements AdminApi {
             final HttpServletRequest httpServletRequest
     ) {
         final RolesUserEnum rolesUserEnum = RolesUserEnum.fromString(role);
-        final UserEntity user = loginService.updateUserRole(userIdentifier, rolesUserEnum, userRequired, httpServletRequest);
+        final UserVO user = loginService.updateUserRole(userIdentifier, rolesUserEnum, userRequired, httpServletRequest);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -136,7 +136,7 @@ public class AdminController implements AdminApi {
                                                     @RequestParam(defaultValue = "10") int size,
                                                     @RequestParam(defaultValue = "creationUserDate") String sortBy,
                                                     @RequestParam(defaultValue = "asc") String direction) {
-        final Page<UserEntity> users = loginService.getInactiveUsers(page, size, sortBy, direction);
+        final Page<UserVO> users = loginService.getInactiveUsers(page, size, sortBy, direction);
         LOGGER.info(users.isEmpty()
                 ? "Get inactive account returned no content"
                 : "Get inactive account successful");
@@ -155,7 +155,7 @@ public class AdminController implements AdminApi {
     @PutMapping("allow-user")
     public ResponseEntity<Object> activeUser(@RequestParam("user") Long userIdentifier,
                                              final HttpServletRequest httpServletRequest) {
-        UserEntity users = loginService.activeUser(userIdentifier, httpServletRequest);
+        final UserVO users = loginService.activeUser(userIdentifier, httpServletRequest);
         LOGGER.info("User account activated successful");
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
@@ -164,16 +164,16 @@ public class AdminController implements AdminApi {
     @PutMapping("block-user")
     public ResponseEntity<Object> blockUser(@RequestParam("user") Long userIdentifier,
                                              final HttpServletRequest httpServletRequest) {
-        UserEntity userEntityBlocked = loginService.blockUser(userIdentifier, httpServletRequest);
+        final UserVO user = loginService.blockUser(userIdentifier, httpServletRequest);
         LOGGER.info("User blocked successful");
-        return new ResponseEntity<>(userEntityBlocked, HttpStatus.OK);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @Override
     @DeleteMapping("delete-user")
     public ResponseEntity<Object> deleteUser(@RequestParam("user") Long userIdentifier,
                                              final HttpServletRequest httpServletRequest) {
-         this.loginService.deleteUser(userIdentifier, httpServletRequest);
+        this.loginService.deleteUser(userIdentifier, httpServletRequest);
         LOGGER.info("User deleted successful");
         return ResponseEntity.noContent().build();
     }
@@ -182,7 +182,7 @@ public class AdminController implements AdminApi {
     @PutMapping("inactive-user")
     public ResponseEntity<Object> inactiveUser(@RequestParam("user") Long userIdentifier,
                                                final HttpServletRequest httpServletRequest) {
-        UserEntity userEntity = loginService.inactiveAccount(userIdentifier, httpServletRequest);
+        final UserVO userEntity = loginService.inactiveAccount(userIdentifier, httpServletRequest);
         LOGGER.info("Inactive account successful");
         return new ResponseEntity<>(userEntity, HttpStatus.OK);
     }
@@ -191,7 +191,7 @@ public class AdminController implements AdminApi {
     @PutMapping("force-password-change")
     public ResponseEntity<Object> forcePasswordChange(@RequestParam("user") Long userIdentifier,
                                              final HttpServletRequest httpServletRequest) {
-        UserEntity userEntity = loginService.forcePasswordChange(userIdentifier, httpServletRequest);
+        final UserVO userEntity = loginService.forcePasswordChange(userIdentifier, httpServletRequest);
         //todo invalidate token session
         LOGGER.info("Force password change for user {} successful", userIdentifier);
         return new ResponseEntity<>(userEntity, HttpStatus.OK);
@@ -201,17 +201,17 @@ public class AdminController implements AdminApi {
     @GetMapping("get-user-by-identifier")
     public ResponseEntity<Object> getUserByUsername(@RequestParam(value = "username", required = false) String username,
                                                     @RequestParam(value = "name", required = false) String name) throws BadRequestException {
-        UserEntity users;
+        UserVO user;
         if (username != null && !username.isEmpty()) {
-            users = loginService.getUserByUsername(username);
+            user = loginService.getUserByUsername(username);
             LOGGER.info("Get user by username successfully.");
         } else if (name != null && !name.isEmpty()) {
-            users = loginService.getUserByName(name);
+            user = loginService.getUserByName(name);
             LOGGER.info("Get user by name successfully.");
         } else {
             throw new BadRequestException("You must provide either 'username' or 'name'");
         }
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @Override
@@ -220,7 +220,7 @@ public class AdminController implements AdminApi {
                                                     @RequestParam(defaultValue = "10") int size,
                                                     @RequestParam(defaultValue = "creationUserDate") String sortBy,
                                                     @RequestParam(defaultValue = "asc") String direction) {
-        final Page<UserEntity> users = loginService.getActiveSessions(page, size, sortBy, direction);
+        final Page<UserVO> users = loginService.getActiveSessions(page, size, sortBy, direction);
         LOGGER.info(users.isEmpty()
                 ? "Get active sessions returned no content"
                 : "Get active sessions successful");
@@ -245,15 +245,5 @@ public class AdminController implements AdminApi {
                 ? "Get new users per month returned no content"
                 : "Get new users per month successful");
         return new ResponseEntity<>(newUsersPerMonth, HttpStatus.OK);
-    }
-
-    @Override
-    @GetMapping("get-login-accesses-by-country")
-    public ResponseEntity<Object> getAccessesByCountry() {
-        final List<IpAccessDTO> ipAccess = logService.getAccessesByCountry();
-        LOGGER.info(ipAccess.isEmpty()
-                ? "Get accesses by country returned no content"
-                : "Get accesses by country successful");
-        return new ResponseEntity<>(ipAccess, HttpStatus.OK);
     }
 }

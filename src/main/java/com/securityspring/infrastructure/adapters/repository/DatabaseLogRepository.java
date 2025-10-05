@@ -5,9 +5,6 @@ import java.util.List;
 import jakarta.transaction.Transactional;
 import com.securityspring.domain.model.LogsEntity;
 import com.securityspring.domain.port.LogRepository;
-import com.securityspring.infrastructure.adapters.dto.IpAccessDTO;
-import com.securityspring.infrastructure.adapters.dto.LoginAttemptsCountDTO;
-import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
@@ -38,17 +35,9 @@ public interface DatabaseLogRepository extends LogRepository {
 
     @Query("SELECT l.action, COUNT(l) " +
             "FROM LogsEntity l " +
-            "WHERE l.action IN ('LOGIN ACCOUNT', 'LOGIN_FAILED') " +
+            "WHERE l.action IN ('LOGIN ACCOUNT', 'LOGIN ATTEMPT FAILED') " +
             "GROUP BY l.action")
     List<Object[]> getLoginAttempts();
-
-    @Query("SELECT new com.securityspring.infrastructure.adapters.dto.IpAccessDTO(l.ipAddress, COUNT(l)) " +
-            "FROM LogsEntity l " +
-            "WHERE l.action LIKE '%LOGIN ATTEMPT%' " +
-            "AND l.ipAddress is not null " +
-            "AND l.ipAddress <> '' " +
-            "GROUP BY l.ipAddress")
-    List<IpAccessDTO> getAccessesByCountry();
 
 }
 
