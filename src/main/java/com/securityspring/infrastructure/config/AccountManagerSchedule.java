@@ -1,6 +1,7 @@
 package com.securityspring.infrastructure.config;
 
 import java.time.LocalDateTime;
+import com.securityspring.application.service.api.EmailServiceApi;
 import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
 import com.securityspring.infrastructure.adapters.vo.UserVO;
@@ -19,11 +20,14 @@ public class AccountManagerSchedule {
 
     private final LoginServiceApi loginService;
 
+    private final EmailServiceApi emailServiceApi;
+
     @Autowired
     public AccountManagerSchedule(final LogServiceApi logService,
-                                  final LoginServiceApi loginService) {
+                                  final LoginServiceApi loginService, EmailServiceApi emailServiceApi) {
         this.logService = logService;
         this.loginService = loginService;
+        this.emailServiceApi = emailServiceApi;
     }
 
     @Scheduled(cron = "0 0 6 * * ?", zone = "America/Sao_Paulo")
@@ -45,6 +49,8 @@ public class AccountManagerSchedule {
         this.logService.setLog("DAILY SCHEDULE", user.getIdentifier(), String.format("Account deletion completed. %d accounts were permanently deleted.",
                 deletedOldAccountsCount));
         LOGGER.info("Account deletion completed. {} accounts were permanently deleted.", deletedOldAccountsCount);
+        int tokenAccountsValidateCodeCount = this.emailServiceApi.deleteOldTokens();
+        LOGGER.info("Tokens deletion completed. {} tokens were permanently deleted.", tokenAccountsValidateCodeCount);
         LOGGER.info("Daily maintenance tasks finished at {}.", LocalDateTime.now());
     }
 

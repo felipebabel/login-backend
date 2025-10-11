@@ -14,4 +14,7 @@ public interface PasswordResetTokenRepository extends EntityRepository<PasswordR
             StatusEnum status,
             LocalDateTime now
     );
+
+    int deleteOldTokens(final LocalDateTime dateTime);
 }
+

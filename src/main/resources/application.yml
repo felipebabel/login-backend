@@ -3,9 +3,9 @@ server:
 
 spring:
   application:
-    name: security-spring
+    name: login_project
   datasource:
-    url: jdbc:postgresql://localhost:5432/login-project
+    url: jdbc:postgresql://localhost:5432/login_project
     username: admin
     password: admin
     driver-class-name: org.postgresql.Driver
@@ -19,6 +19,9 @@ spring:
 
 security-project:
   secret-key: ${SECRET_KEY}
+
+jwt:
+  secret: ${}
 
 email-service:
   from: ${EMAIL_FROM}
