@@ -127,6 +127,6 @@ public interface LoginServiceApi {
                        final HttpServletRequest httpServletRequest);
 
     UserVO updateUserStatus(final StatusEnum statusEnum,
-                       final UserEntity user);
+                       final UserVO user);
 
 }

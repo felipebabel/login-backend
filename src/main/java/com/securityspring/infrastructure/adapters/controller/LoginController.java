@@ -5,20 +5,22 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import com.securityspring.application.service.api.EmailServiceApi;
+import com.securityspring.application.service.api.JwtServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
 import com.securityspring.domain.enums.StatusEnum;
 import com.securityspring.domain.exception.BadRequestException;
-import com.securityspring.domain.model.UserEntity;
 import com.securityspring.infrastructure.adapters.api.LoginApi;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
+import com.securityspring.infrastructure.adapters.vo.TokenVO;
 import com.securityspring.infrastructure.adapters.vo.UserVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,12 +36,16 @@ public class LoginController implements LoginApi {
 
     private final EmailServiceApi emailService;
 
+    private final JwtServiceApi jwtService;
+
     static final Logger LOGGER = LoggerFactory.getLogger(LoginController.class);
 
     public LoginController(final LoginServiceApi loginService,
-                           final EmailServiceApi emailService) {
+                           final EmailServiceApi emailService,
+                           final JwtServiceApi jwtService) {
         this.loginService = loginService;
         this.emailService = emailService;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -47,7 +53,8 @@ public class LoginController implements LoginApi {
     public ResponseEntity<Object> login(@Valid @RequestBody final LoginRequestDto loginRequestDto,
                                         final HttpServletRequest httpServletRequest) throws InterruptedException {
         final UserVO user = loginService.login(loginRequestDto, httpServletRequest);
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        final TokenVO token = jwtService.generateToken(user);
+        return new ResponseEntity<>(token, HttpStatus.OK);
     }
 
     @Override
@@ -62,6 +69,7 @@ public class LoginController implements LoginApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/update-account")
     public ResponseEntity<Object> updateAccount(@RequestParam("user") final Long userIdentifier,
                                                 @Valid @RequestBody final UpdateAccountRequestDto account,
@@ -74,6 +82,7 @@ public class LoginController implements LoginApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'ANALYST')")
     @PutMapping("/logout")
     public ResponseEntity<Object> logout(@RequestParam("user") final Long userIdentifier,
                                          final HttpServletRequest httpServletRequest) {
@@ -99,7 +108,8 @@ public class LoginController implements LoginApi {
                                                @RequestParam("email") final String email,
                                                final HttpServletRequest httpServletRequest) {
         LOGGER.info("Validate code for {}", email);
-        this.emailService.validateCode(code, email, httpServletRequest);
+        final UserVO user = this.emailService.validateCode(code, email, httpServletRequest);
+        this.loginService.updateUserStatus(StatusEnum.ACTIVE, user);
         LOGGER.info("Code validate successfully for {}", email);
         return ResponseEntity.noContent().build();
     }

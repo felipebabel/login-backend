@@ -3,12 +3,16 @@ package com.securityspring.application.service.impl;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.Getter;
 import com.securityspring.application.service.api.EmailServiceApi;
 import com.securityspring.application.service.api.LogServiceApi;
@@ -40,7 +44,6 @@ import com.securityspring.infrastructure.adapters.mapper.UserMapper;
 import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
 import com.securityspring.infrastructure.adapters.vo.UserVO;
 import com.securityspring.infrastructure.config.ProjectProperties;
-import com.securityspring.infrastructure.config.TokenJwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -74,8 +77,6 @@ public class LoginServiceImpl implements LoginServiceApi {
 
     private final EmailServiceApi emailService;
 
-    private final TokenJwtUtil tokenJwtUtil;
-
     static final Logger LOGGER = LoggerFactory.getLogger(LoginServiceImpl.class);
 
 
@@ -84,15 +85,13 @@ public class LoginServiceImpl implements LoginServiceApi {
                             final UserRepository userRepository,
                             final LogServiceApi logService,
                             final ConfigRepository configRepository,
-                            final EmailServiceApi emailService,
-                            final TokenJwtUtil tokenJwtUtil) {
+                            final EmailServiceApi emailService) {
         this.projectProperties = projectProperties;
         this.passwordService = passwordService;
         this.userRepository = userRepository;
         this.logService = logService;
         this.configRepository = configRepository;
         this.emailService = emailService;
-        this.tokenJwtUtil = tokenJwtUtil;
     }
 
     @Override
@@ -249,7 +248,6 @@ public class LoginServiceImpl implements LoginServiceApi {
         this.logService.setLog("LOGIN ACCOUNT", user.getIdentifier(), httpServletRequest);
         return UserMapper.toVO(user);
     }
-
 
     private void handleInvalidPassword(final UserEntity user,
                                        final HttpServletRequest httpServletRequest) {
@@ -621,15 +619,19 @@ public class LoginServiceImpl implements LoginServiceApi {
         userEntity.setPasswordChangeDate(LocalDate.now());
         this.userRepository.save(userEntity);
         this.logService.setLog("PASSWORD RESET", userEntity.getIdentifier(), "Password reset successfully.");
-        // TODO Excluir DO PASSWORD RESET TOKEN REPOSITORY
     }
 
     @Override
     public UserVO updateUserStatus(final StatusEnum statusEnum,
-                                 final UserEntity user) {
-        user.setStatus(statusEnum);
-        this.userRepository.save(user);
-        return UserMapper.toVO(user);
+                                 final UserVO user) {
+        Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user.getIdentifier());
+        if (userEntity.isPresent()) {
+            userEntity.get().setStatus(statusEnum);
+            this.userRepository.save(userEntity.get());
+            return UserMapper.toVO(userEntity.get());
+
+        }
+        return new UserVO();
     }
 
 }

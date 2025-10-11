@@ -6,7 +6,6 @@ import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
 import com.securityspring.domain.enums.RolesUserEnum;
 import com.securityspring.domain.exception.BadRequestException;
-import com.securityspring.domain.model.UserEntity;
 import com.securityspring.infrastructure.adapters.api.AdminApi;
 import com.securityspring.infrastructure.adapters.dto.LogDto;
 import com.securityspring.infrastructure.adapters.dto.LoginAttemptsCountDTO;
@@ -19,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -46,6 +46,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
     @GetMapping("get-pending-account")
     public ResponseEntity<Object> getPendingAccount(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "10") int size,
@@ -76,6 +77,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
     @GetMapping("get-active-account")
     public ResponseEntity<Object> getActiveAccount(@RequestParam(defaultValue = "0") int page,
                                                    @RequestParam(defaultValue = "10") int size,
@@ -89,6 +91,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
     @GetMapping("get-blocked-account")
     public ResponseEntity<Object> getBlockedAccount(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "10") int size,
@@ -102,6 +105,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
     @GetMapping("get-users")
     public ResponseEntity<Object> getUsers(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "10") int size,
@@ -118,6 +122,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/update-role")
     public ResponseEntity<Object> updateUserRole(
             @RequestParam final Long userIdentifier,
@@ -131,6 +136,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
     @GetMapping("get-inactive-account")
     public ResponseEntity<Object> getInactiveAccount(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "10") int size,
@@ -144,6 +150,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
     @GetMapping("get-total-account")
     public ResponseEntity<Object> getTotalAccount() throws BadRequestException {
         final TotalAccountVO totalAccountVO = loginService.getTotalAccount();
@@ -152,6 +159,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("allow-user")
     public ResponseEntity<Object> activeUser(@RequestParam("user") Long userIdentifier,
                                              final HttpServletRequest httpServletRequest) {
@@ -161,6 +169,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("block-user")
     public ResponseEntity<Object> blockUser(@RequestParam("user") Long userIdentifier,
                                              final HttpServletRequest httpServletRequest) {
@@ -170,6 +179,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("delete-user")
     public ResponseEntity<Object> deleteUser(@RequestParam("user") Long userIdentifier,
                                              final HttpServletRequest httpServletRequest) {
@@ -179,6 +189,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("inactive-user")
     public ResponseEntity<Object> inactiveUser(@RequestParam("user") Long userIdentifier,
                                                final HttpServletRequest httpServletRequest) {
@@ -188,16 +199,17 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("force-password-change")
     public ResponseEntity<Object> forcePasswordChange(@RequestParam("user") Long userIdentifier,
                                              final HttpServletRequest httpServletRequest) {
         final UserVO userEntity = loginService.forcePasswordChange(userIdentifier, httpServletRequest);
-        //todo invalidate token session
         LOGGER.info("Force password change for user {} successful", userIdentifier);
         return new ResponseEntity<>(userEntity, HttpStatus.OK);
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN', 'USER')")
     @GetMapping("get-user-by-identifier")
     public ResponseEntity<Object> getUserByUsername(@RequestParam(value = "username", required = false) String username,
                                                     @RequestParam(value = "name", required = false) String name) throws BadRequestException {
@@ -215,6 +227,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
     @GetMapping("get-active-sessions")
     public ResponseEntity<Object> getActiveSession(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "10") int size,
@@ -228,6 +241,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
     @GetMapping("get-login-attempts")
     public ResponseEntity<Object> getLoginAttempts() {
         final List<LoginAttemptsCountDTO> loginAttempts = logService.getLoginAttempts();
@@ -238,6 +252,7 @@ public class AdminController implements AdminApi {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
     @GetMapping("get-new-account-month")
     public ResponseEntity<Object> getNewAccountMonth() {
         final List<NewUsersPerMonthDTO> newUsersPerMonth = loginService.getNewAccountMonth();
