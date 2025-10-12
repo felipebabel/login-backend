@@ -7,10 +7,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    private final ProjectProperties projectProperties;
+
+    public WebConfig(ProjectProperties projectProperties) {
+        this.projectProperties = projectProperties;
+    }
+
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        final String frontUrl = projectProperties.getProperty("front-end.url");
+
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:5173")
+                .allowedOrigins(frontUrl)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)

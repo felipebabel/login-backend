@@ -25,6 +25,5 @@ services:
       FRONT_END_URL: http://localhost:5173
       JWT_SECRET: 571
       BREVO_API: 801
-      MAX_SECONDS_TOKEN: 30
     depends_on:
       - postgres_db
