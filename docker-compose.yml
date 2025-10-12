@@ -1,16 +1,4 @@
 services:
-  postgres_db:
-    image: postgres:15
-    container_name: postgres_db
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: login_project
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./src/main/resources/db-init:/docker-entrypoint-initdb.d
-
   login-backend:
     build: .
     container_name: login-backend
@@ -23,13 +11,7 @@ services:
       SECRET_KEY: mySecretKeyForTesting_1234567890abcdef
       EMAIL_FROM: babelfelipe@gmail.com
       JWT_SECRET: 42321
-      BREVO_API: 401
+      BREVO_API: a
       FRONT_END_URL: http://localhost:5173
-      SPRING_MAIL_HOST: smtp.gmail.com
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: babelfelipe@gmail.com
-      SPRING_MAIL_PASSWORD: rbfn bcuj zdir zcmq
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
     depends_on:
       - postgres_db

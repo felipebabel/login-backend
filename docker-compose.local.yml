@@ -26,11 +26,5 @@ services:
       JWT_SECRET: 571
       BREVO_API: 801
       MAX_SECONDS_TOKEN: 30
-      SPRING_MAIL_HOST: smtp.gmail.com
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: babelfelipe@gmail.com
-      SPRING_MAIL_PASSWORD: rbfn bcuj zdir zcmq
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
     depends_on:
       - postgres_db
