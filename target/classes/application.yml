@@ -20,8 +20,11 @@ spring:
 security-project:
   secret-key: ${SECRET_KEY}
 
+brevo:
+  api-key: ${BREVO_API}
+
 jwt:
-  secret: ${}
+  secret: ${JWT_SECRET}
 
 email-service:
   from: ${EMAIL_FROM}

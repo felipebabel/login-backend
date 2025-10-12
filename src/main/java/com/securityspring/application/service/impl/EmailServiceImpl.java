@@ -10,7 +10,6 @@ import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.Random;
 import jakarta.servlet.http.HttpServletRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.securityspring.application.service.api.EmailServiceApi;
 import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.domain.enums.StatusEnum;
@@ -75,11 +74,11 @@ public class EmailServiceImpl implements EmailServiceApi {
     public void sendEmail(final UserEntity userEntity, final HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
         LOGGER.info("Sending email");
         final String frontUrl = this.projectProperties.getProperty("front-end.url");
-        final String verificationLink = frontUrl + "/#/validate-code-email?flow=email-verification&email="
+        final String verificationLink = frontUrl + "/login/#/validate-code-email?flow=email-verification&email="
                 + URLEncoder.encode(userEntity.getEmail(), "UTF-8");
         final String code = generateCode();
 
-        String message = "<p>Hello " + userEntity.getName() + ",</p>"
+        final String message = "<p>Hello " + userEntity.getName() + ",</p>"
                 + "<p>Thank you for signing up on <b>Login project</b>!</p>"
                 + "<p>To activate your account, please click the button below:</p>"
                 + "<p><a href=\"" + verificationLink + "\" "

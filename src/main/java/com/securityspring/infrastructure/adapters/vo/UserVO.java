@@ -2,6 +2,7 @@ package com.securityspring.infrastructure.adapters.vo;
 
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ import com.securityspring.domain.enums.StatusEnum;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserVO {
 
     private Long identifier;
