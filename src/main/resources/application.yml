@@ -21,7 +21,7 @@ security-project:
   secret-key: ${SECRET_KEY}
 
 brevo:
-  api-key: ${BREVO_API_KEY}
+  api-key: ${BREVO_API}
 
 jwt:
   secret: ${JWT_SECRET}
