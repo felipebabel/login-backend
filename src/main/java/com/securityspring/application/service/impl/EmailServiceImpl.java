@@ -1,12 +1,16 @@
 package com.securityspring.application.service.impl;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.Random;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.securityspring.application.service.api.EmailServiceApi;
 import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.domain.enums.StatusEnum;
@@ -22,47 +26,35 @@ import com.securityspring.infrastructure.config.ProjectProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmailServiceImpl implements EmailServiceApi {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmailServiceImpl.class);
 
     private final ProjectProperties projectProperties;
-
     private final PasswordResetTokenRepository passwordResetTokenRepository;
-
-    static final Logger LOGGER = LoggerFactory.getLogger(EmailServiceImpl.class);
-
     private final UserRepository userRepository;
-
     private final LogServiceApi logService;
 
     @Autowired
-    public EmailServiceImpl(final ProjectProperties projectProperties,
-                            final PasswordResetTokenRepository repository,
-                            final UserRepository userRepository,
-                            final LogServiceApi logService) {
+    public EmailServiceImpl(ProjectProperties projectProperties,
+                            PasswordResetTokenRepository passwordResetTokenRepository,
+                            UserRepository userRepository,
+                            LogServiceApi logService) {
         this.projectProperties = projectProperties;
-        this.passwordResetTokenRepository = repository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.userRepository = userRepository;
         this.logService = logService;
     }
 
     @Override
-    public void sendEmail(final String email,
-                          final HttpServletRequest httpServletRequest) throws MessagingException {
+    public void sendEmail(final String email, final HttpServletRequest httpServletRequest) {
         LOGGER.info("Sending email");
         final UserEntity userEntity = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
         final String code = generateCode();
-
-        final MimeMessage mimeMessage = this.mailSender.createMimeMessage();
-        final MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
 
         final String message = "<p>Hello " + userEntity.getName() + ",</p>"
                 + "<p>We received a request to verify your email address.</p>"
@@ -72,26 +64,21 @@ public class EmailServiceImpl implements EmailServiceApi {
                 + "<p>If you did not request this verification, please ignore this email.</p>"
                 + "<p>Best regards,<br/>Login Project Team</p>";
 
-        helper.setTo(userEntity.getEmail());
-        helper.setSubject("Your Email Verification Code");
-        helper.setText(message, true);
-        helper.setFrom(this.projectProperties.getProperty("email-service.from"));
-        this.mailSender.send(mimeMessage);
+        this.sendEmailViaBrevo(userEntity.getEmail(), "Your Email Verification Code", message);
+
         this.saveToken(code, userEntity);
         this.logService.setLog("EMAIL SENT", String.format("Email sent to %s", email), httpServletRequest);
         LOGGER.info("Email sent");
     }
 
     @Override
-    public void sendEmail(final UserEntity userEntity,
-                          final HttpServletRequest httpServletRequest) throws MessagingException, UnsupportedEncodingException {
+    public void sendEmail(final UserEntity userEntity, final HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
         LOGGER.info("Sending email");
-        final MimeMessage mimeMessage = this.mailSender.createMimeMessage();
-        final MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
         final String frontUrl = this.projectProperties.getProperty("front-end.url");
         final String verificationLink = frontUrl + "/#/validate-code-email?flow=email-verification&email="
                 + URLEncoder.encode(userEntity.getEmail(), "UTF-8");
         final String code = generateCode();
+
         String message = "<p>Hello " + userEntity.getName() + ",</p>"
                 + "<p>Thank you for signing up on <b>Login project</b>!</p>"
                 + "<p>To activate your account, please click the button below:</p>"
@@ -103,22 +90,52 @@ public class EmailServiceImpl implements EmailServiceApi {
                 + "<p><i>⚠ This code is valid for 15 minutes and can only be used once.</i></p>"
                 + "<p>If you did not request this registration, please ignore this email.</p>"
                 + "<p>Best regards,<br/>Login Project Team</p>";
-        helper.setTo(userEntity.getEmail());
-        helper.setSubject("Verify Your Email to Activate Your Account");
-        helper.setText(message, true);
-        helper.setFrom(this.projectProperties.getProperty("email-service.from"));
 
-        this.mailSender.send(mimeMessage);
+        this.sendEmailViaBrevo(userEntity.getEmail(), "Verify Your Email to Activate Your Account", message);
+
         this.saveToken(code, userEntity);
         this.logService.setLog("EMAIL SENT", String.format("Email to activate account sent to %s", userEntity.getEmail()),
-                    httpServletRequest);
+                httpServletRequest);
         LOGGER.info("Email sent");
     }
 
+    private void sendEmailViaBrevo(String to, String subject, String htmlContent) {
+        try {
+            String apiKey = this.projectProperties.getProperty("brevo.api-key");
+            String emailFrom = this.projectProperties.getProperty("email-service.from");
+            HttpClient client = HttpClient.newHttpClient();
+
+            String payload = """
+        {
+          "sender": {"name": "Login Project", "email": "%s"},
+          "to": [{"email": "%s"}],
+          "subject": "%s",
+          "htmlContent": "%s"
+        }
+        """.formatted(emailFrom, to, subject, htmlContent.replace("\"", "\\\"").replace("\n", ""));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                    .header("accept", "application/json")
+                    .header("api-key", apiKey)
+                    .header("content-type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(payload))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                LOGGER.info("Brevo email sent successfully to {}", to);
+            } else {
+                LOGGER.error("Failed to send Brevo email: {} - {}", response.statusCode(), response.body());
+            }
+
+        } catch (IOException | InterruptedException e) {
+            LOGGER.error("Error sending email via Brevo", e);
+        }
+    }
+
     @Override
-    public UserVO validateCode(final String code,
-                               final String email,
-                               final HttpServletRequest httpServletRequest) {
+    public UserVO validateCode(final String code, final String email, final HttpServletRequest httpServletRequest) {
         LOGGER.info("Validating code");
         final UserEntity userEntity = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));

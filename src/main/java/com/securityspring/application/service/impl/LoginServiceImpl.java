@@ -130,7 +130,6 @@ public class LoginServiceImpl implements LoginServiceApi {
         userEntity.setEmail(email);
         userEntity.setLanguage(language);
         userEntity.setStatus(statusEnum);
-        userEntity.setLastAccessDate(LocalDateTime.now());
         userEntity.setCreationUserDate(LocalDateTime.now());
         userEntity.setLoginAttempt(0);
         userEntity.setRole(role);
@@ -425,7 +424,7 @@ public class LoginServiceImpl implements LoginServiceApi {
 
         final Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<UserEntity> userList = this.userRepository.findByActiveSession(StatusEnum.ACTIVE, pageable);
+        Page<UserEntity> userList = this.userRepository.findByActiveSession(StatusEnum.ACTIVE, pageable, LocalDateTime.now().minusMinutes(10));
         return new PageImpl<>(
                 userList.getContent().stream()
                         .map(UserMapper::toVO)
@@ -550,6 +549,11 @@ public class LoginServiceImpl implements LoginServiceApi {
     @Override
     public int deleteOldAccounts() {
         return this.userRepository.deleteOldAccounts(LocalDateTime.now().minusDays(60));
+    }
+
+    @Override
+    public void updateLastAccess(final String username) {
+        this.userRepository.updateLastAccess(username);
     }
 
     @Override

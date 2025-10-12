@@ -7,7 +7,7 @@ CREATE TABLE login_user (
     ds_email VARCHAR(255) UNIQUE NOT NULL,
     ds_name VARCHAR(255) NOT NULL,
     ds_status VARCHAR(50) NOT NULL,
-    dt_last_access TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    dt_last_access TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     dt_creation_user TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     nr_login_attempt INT NOT NULL,
     dt_login TIMESTAMP DEFAULT NULL,

@@ -23,9 +23,12 @@ public interface UserRepository extends EntityRepository<UserEntity, Long> {
                                   final Pageable pageable);
 
     Page<UserEntity> findByActiveSession(final StatusEnum status,
-                                         final Pageable pageable);
+                                         final Pageable pageable,
+                                         final LocalDateTime date);
 
     int deleteOldAccounts(final LocalDateTime dateTime);
+
+    void updateLastAccess(final String username);
 
     int deactivateUsers(final LocalDateTime dateTime,
                         final StatusEnum inactive,
