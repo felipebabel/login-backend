@@ -41,7 +41,7 @@ public interface DatabaseUserRepository extends UserRepository {
             " SUM(CASE WHEN DS_STATUS = 'INACTIVE' THEN 1 ELSE 0 END) AS totalInactive, " +
             " SUM(CASE WHEN DS_STATUS = 'PENDING' THEN 1 ELSE 0 END) AS totalPending, " +
             " SUM(CASE WHEN DS_STATUS = 'BLOCKED' THEN 1 ELSE 0 END) AS totalBlocked, " +
-            " SUM(CASE WHEN DT_LOGIN IS NOT NULL THEN 1 ELSE 0 END) AS totalActiveSession " +
+            " SUM(CASE WHEN DT_LAST_ACCESS > NOW() - INTERVAL '10 minutes' THEN 1 ELSE 0 END) AS totalActiveSession " +
             " FROM login_user " +
             " WHERE DS_USERNAME <> 'admin'", nativeQuery = true)
     TotalAccountProjection getTotalAccount();
@@ -62,11 +62,17 @@ public interface DatabaseUserRepository extends UserRepository {
     @Override
     @Query("select u FROM UserEntity u "
             + " WHERE u.status = :status"
-            + " AND u.loginDate is not null"
+            + " AND u.lastAccessDate > :date"
             + " AND u.username <> 'admin'")
     Page<UserEntity> findByActiveSession(@Param("status") final StatusEnum status,
-                                         final Pageable pageable);
+                                         final Pageable pageable,
+                                         @Param("date") final LocalDateTime date);
 
+    @Modifying
+    @Override
+    @Transactional
+    @Query("UPDATE UserEntity u SET u.lastAccessDate = CURRENT_TIMESTAMP WHERE u.username = :username")
+    void updateLastAccess(@Param("username") String username);
 
     @Modifying
     @Override

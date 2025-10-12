@@ -12,7 +12,6 @@ public class DefaultUsersConfig {
     @Autowired
     private LoginServiceApi loginService;
 
-
     @Bean
     public CommandLineRunner createAdminUser() {
         return args -> {

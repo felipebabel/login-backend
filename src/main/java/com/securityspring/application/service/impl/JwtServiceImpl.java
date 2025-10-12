@@ -8,6 +8,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import com.securityspring.application.service.api.ConfigServiceApi;
 import com.securityspring.application.service.api.JwtServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
+import com.securityspring.infrastructure.adapters.dto.RefreshTokenRequestDto;
 import com.securityspring.infrastructure.adapters.vo.ConfigVO;
 import com.securityspring.infrastructure.adapters.vo.TokenVO;
 import com.securityspring.infrastructure.adapters.vo.UserVO;
@@ -15,12 +16,15 @@ import com.securityspring.infrastructure.config.ProjectProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.security.Key;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -70,21 +74,27 @@ public class JwtServiceImpl implements JwtServiceApi {
     }
 
     @Override
-    public TokenVO refreshToken(String oldRefreshToken, UserVO userVO) {
+    public ResponseEntity<TokenVO> refreshToken(RefreshTokenRequestDto requestDto, UserVO userVO) {
+        if (Objects.isNull(requestDto) || Objects.isNull(requestDto.getRefreshToken())
+                || requestDto.getRefreshToken().trim().isEmpty()) {
+            LOGGER.warn("Invalid refresh token request: missing or empty token.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        final String oldRefreshToken = requestDto.getRefreshToken();
         if (isTokenExpired(oldRefreshToken)) {
-            LOGGER.warn("Refresh token expired");
-            return null;
+            LOGGER.warn("Token refresh failed: refresh token expired or invalid.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String username = extractUsername(oldRefreshToken);
+        final String username = extractUsername(oldRefreshToken);
         String role = userVO.getRole().name();
 
-        HashMap<String, Object> claims = new HashMap<>();
+        final HashMap<String, Object> claims = new HashMap<>();
         claims.put("role", role);
 
         long accessTokenValidity = getAccessTokenValidity();
 
-        String newAccessToken = Jwts.builder()
+        final String newAccessToken = Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date())
@@ -92,11 +102,13 @@ public class JwtServiceImpl implements JwtServiceApi {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
 
-        return TokenVO.builder()
+        final TokenVO tokenVO = TokenVO.builder()
                 .token(newAccessToken)
                 .refreshToken(oldRefreshToken)
                 .expiresIn(accessTokenValidity)
                 .build();
+        LOGGER.info("Token successfully refreshed for user: {}", username);
+        return ResponseEntity.ok(tokenVO);
     }
 
 

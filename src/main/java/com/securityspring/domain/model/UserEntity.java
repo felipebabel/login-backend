@@ -50,7 +50,7 @@ public class UserEntity {
     @Column(name = "DS_STATUS", length = 50, nullable = false)
     private StatusEnum status;
 
-    @Column(name = "DT_LAST_ACCESS", nullable = false)
+    @Column(name = "DT_LAST_ACCESS")
     private LocalDateTime lastAccessDate;
 
     @Column(name = "DT_LOGIN")

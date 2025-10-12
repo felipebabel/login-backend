@@ -1,6 +1,8 @@
 package com.securityspring.infrastructure.config;
 
 import com.securityspring.application.service.api.JwtServiceApi;
+import com.securityspring.application.service.api.LoginServiceApi;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,15 +24,19 @@ public class SecurityConfig {
 
     private final JwtServiceApi jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public SecurityConfig(JwtServiceApi jwtService, CustomUserDetailsService userDetailsService) {
+
+    public SecurityConfig(final JwtServiceApi jwtService,
+                          final CustomUserDetailsService userDetailsService, ApplicationEventPublisher eventPublisher) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtService, userDetailsService);
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtService, userDetailsService, eventPublisher);
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth

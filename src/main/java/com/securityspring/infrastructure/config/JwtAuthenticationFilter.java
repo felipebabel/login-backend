@@ -8,7 +8,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,14 +21,20 @@ import com.securityspring.application.service.api.JwtServiceApi;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    public JwtAuthenticationFilter(JwtServiceApi jwtService, CustomUserDetailsService userDetailsService) {
+    private final JwtServiceApi jwtService;
+
+    private final CustomUserDetailsService userDetailsService;
+
+    private final ApplicationEventPublisher eventPublisher;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    public JwtAuthenticationFilter(final JwtServiceApi jwtService,
+                                   final CustomUserDetailsService userDetailsService, ApplicationEventPublisher eventPublisher) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.eventPublisher = eventPublisher;
     }
-
-    private final JwtServiceApi jwtService;
-    private final CustomUserDetailsService userDetailsService;
-    private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -103,6 +111,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     LOGGER.warn("No role found in JWT for user '{}'", username);
                 }
 
+                final AuthenticationSuccessEvent successEvent =
+                        new AuthenticationSuccessEvent(SecurityContextHolder.getContext().getAuthentication());
+                this.eventPublisher.publishEvent(successEvent);
             } else {
                 LOGGER.warn("Invalid JWT token for user '{}'", username);
             }

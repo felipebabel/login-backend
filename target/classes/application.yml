@@ -20,6 +20,9 @@ spring:
 security-project:
   secret-key: ${SECRET_KEY}
 
+jwt:
+  secret: ${}
+
 email-service:
   from: ${EMAIL_FROM}
 
