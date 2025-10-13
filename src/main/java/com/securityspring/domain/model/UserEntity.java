@@ -79,7 +79,7 @@ public class UserEntity {
 
     @Builder.Default
     @Column(name = "DT_PASSWORD_CHANGE", nullable = false)
-    private LocalDate passwordChangeDate = LocalDate.now();
+    private LocalDateTime passwordChangeDate = LocalDateTime.now();
 
     @Column(name = "NR_PHONE", length = 20)
     private String phone;

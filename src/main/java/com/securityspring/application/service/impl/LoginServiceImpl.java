@@ -134,7 +134,7 @@ public class LoginServiceImpl implements LoginServiceApi {
         userEntity.setLoginAttempt(0);
         userEntity.setRole(role);
         if (user.equalsIgnoreCase("user")) {
-            userEntity.setPasswordChangeDate(LocalDate.now().minusDays(89));
+            userEntity.setPasswordChangeDate(LocalDateTime.now().minusDays(89));
         }
         this.userRepository.save(userEntity);
         LOGGER.info("User saved: Id: {}", userEntity.getIdentifier());
@@ -229,13 +229,16 @@ public class LoginServiceImpl implements LoginServiceApi {
                 throw new UserInactiveException("Your account is inactive.");
             }
         }
+        if (user.isForcePasswordChange()) {
+            throw new PasswordExpiredException("Password expired");
+        }
         Optional<ConfigEntity> config = this.configRepository.findByKey("passwordExpiryDays");
         long value = 90L;
         if (config.isPresent()) {
             value = Long.parseLong(config.get().getValue());
         }
         final LocalDate expiryDate = LocalDate.now().minusDays(value);
-        if (user.getPasswordChangeDate().isBefore(expiryDate)) {
+        if (user.getPasswordChangeDate().toLocalDate().isBefore(expiryDate)) {
             throw new PasswordExpiredException("Password expired");
         }
         if (!passwordService.checkPassword(loginRequestDto.getPassword(), user.getPassword())) {
@@ -609,7 +612,7 @@ public class LoginServiceImpl implements LoginServiceApi {
         UserEntity userEntity;
         if (Objects.nonNull(user)) {
             userEntity = this.userRepository.findByUsername(user)
-                    .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
+                    .orElseThrow(() -> new UserNotFoundException("Not found user with username: " + user));
         } else {
             userEntity = this.userRepository.findByEmail(email)
                     .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
@@ -620,7 +623,8 @@ public class LoginServiceImpl implements LoginServiceApi {
         }
         userEntity.setUpdateDate(LocalDateTime.now());
         userEntity.setPassword(encryptedPassword);
-        userEntity.setPasswordChangeDate(LocalDate.now());
+        userEntity.setPasswordChangeDate(LocalDateTime.now());
+        userEntity.setForcePasswordChange(false);
         this.userRepository.save(userEntity);
         this.logService.setLog("PASSWORD RESET", userEntity.getIdentifier(), "Password reset successfully.");
     }

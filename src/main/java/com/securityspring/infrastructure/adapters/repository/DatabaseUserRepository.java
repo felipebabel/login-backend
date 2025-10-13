@@ -102,6 +102,7 @@ public interface DatabaseUserRepository extends UserRepository {
             "EXTRACT(MONTH FROM DT_CREATION_USER) as month, " +
             "COUNT(cd_identifier) as totalUsers " +
             "FROM login_user " +
+            "WHERE DT_CREATION_USER >= (current_date - interval '12 months') " +
             "GROUP BY EXTRACT(YEAR FROM DT_CREATION_USER), EXTRACT(MONTH FROM DT_CREATION_USER) " +
             "ORDER BY EXTRACT(YEAR FROM DT_CREATION_USER), EXTRACT(MONTH FROM DT_CREATION_USER)",
             nativeQuery = true)

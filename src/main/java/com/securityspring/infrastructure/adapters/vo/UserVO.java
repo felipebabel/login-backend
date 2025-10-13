@@ -31,7 +31,7 @@ public class UserVO {
     private boolean forcePasswordChange;
     private RolesUserEnum role;
     private LanguagesEnum language;
-    private LocalDate passwordChangeDate;
+    private LocalDateTime passwordChangeDate;
     private String phone;
     private GenderEnum gender;
     private LocalDate birthDate;

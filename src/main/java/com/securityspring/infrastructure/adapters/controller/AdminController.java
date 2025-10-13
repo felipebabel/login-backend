@@ -125,9 +125,9 @@ public class AdminController implements AdminApi {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/update-role")
     public ResponseEntity<Object> updateUserRole(
-            @RequestParam final Long userIdentifier,
-            @RequestParam final String role,
-            @RequestParam final Long userRequired,
+            @RequestParam("userIdentifier") final Long userIdentifier,
+            @RequestParam("role") final String role,
+            @RequestParam("userRequired") final Long userRequired,
             final HttpServletRequest httpServletRequest
     ) {
         final RolesUserEnum rolesUserEnum = RolesUserEnum.fromString(role);
@@ -193,9 +193,9 @@ public class AdminController implements AdminApi {
     @PutMapping("inactive-user")
     public ResponseEntity<Object> inactiveUser(@RequestParam("user") Long userIdentifier,
                                                final HttpServletRequest httpServletRequest) {
-        final UserVO userEntity = loginService.inactiveAccount(userIdentifier, httpServletRequest);
+        final UserVO userVO = loginService.inactiveAccount(userIdentifier, httpServletRequest);
         LOGGER.info("Inactive account successful");
-        return new ResponseEntity<>(userEntity, HttpStatus.OK);
+        return new ResponseEntity<>(userVO, HttpStatus.OK);
     }
 
     @Override
