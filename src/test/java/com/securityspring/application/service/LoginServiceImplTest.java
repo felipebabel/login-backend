@@ -58,7 +58,7 @@ class LoginServiceImplTest {
         userEntity.setUsername("user");
         userEntity.setPassword("encrypted");
         userEntity.setStatus(StatusEnum.ACTIVE);
-        userEntity.setPasswordChangeDate(LocalDate.now());
+        userEntity.setPasswordChangeDate(LocalDateTime.now());
         userEntity.setLoginAttempt(0);
     }
 
@@ -128,7 +128,7 @@ class LoginServiceImplTest {
         userEntity.setUsername("user");
         userEntity.setPassword("encrypted");
         userEntity.setStatus(StatusEnum.ACTIVE);
-        userEntity.setPasswordChangeDate(LocalDate.now());
+        userEntity.setPasswordChangeDate(LocalDateTime.now());
         userEntity.setLoginAttempt(0);
 
         when(userRepository.findByUsername("user")).thenReturn(Optional.of(userEntity));
@@ -153,7 +153,7 @@ class LoginServiceImplTest {
         dto.setUser("user");
         dto.setPassword("pass");
 
-        userEntity.setPasswordChangeDate(LocalDate.now().minusDays(100));
+        userEntity.setPasswordChangeDate(LocalDateTime.now().minusDays(100));
         when(userRepository.findByUsername("user")).thenReturn(Optional.of(userEntity));
         when(configRepository.findByKey("passwordExpiryDays"))
                 .thenReturn(Optional.of(new ConfigEntity(1L, "passwordExpiryDays", "90", LocalDateTime.now())));
