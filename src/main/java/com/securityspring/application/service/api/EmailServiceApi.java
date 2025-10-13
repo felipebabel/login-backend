@@ -19,6 +19,6 @@ public interface EmailServiceApi {
     void sendEmail(final UserEntity userEntity,
                    final HttpServletRequest httpServletRequest) throws MessagingException, UnsupportedEncodingException;
 
-    public int deleteOldTokens();
+    int deleteOldTokens();
 
 }

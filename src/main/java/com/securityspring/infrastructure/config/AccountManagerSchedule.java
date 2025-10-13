@@ -44,11 +44,6 @@ public class AccountManagerSchedule {
         this.logService.setLog("DAILY SCHEDULE", user.getIdentifier(), String.format("Account status update completed. %d users were set to INACTIVE.",
                 deactivatedUsersCount));
         LOGGER.info("Account status update completed. {} users were set to INACTIVE.", deactivatedUsersCount);
-        LOGGER.info("Beginning deletion of accounts inactive for 60+ days.");
-        int deletedOldAccountsCount = this.loginService.deleteOldAccounts();
-        this.logService.setLog("DAILY SCHEDULE", user.getIdentifier(), String.format("Account deletion completed. %d accounts were permanently deleted.",
-                deletedOldAccountsCount));
-        LOGGER.info("Account deletion completed. {} accounts were permanently deleted.", deletedOldAccountsCount);
         int tokenAccountsValidateCodeCount = this.emailServiceApi.deleteOldTokens();
         LOGGER.info("Tokens deletion completed. {} tokens were permanently deleted.", tokenAccountsValidateCodeCount);
         LOGGER.info("Daily maintenance tasks finished at {}.", LocalDateTime.now());

@@ -51,14 +51,6 @@ public interface DatabaseUserRepository extends UserRepository {
     Page<UserEntity> findByStatus(@Param("status") final StatusEnum status,
                                   final Pageable pageable);
 
-    @Modifying
-    @Override
-    @Transactional
-    @Query("DELETE FROM UserEntity u "
-            + " WHERE u.lastAccessDate < :date"
-            + " AND u.username <> 'admin'")
-    int deleteOldAccounts(@Param("date") final LocalDateTime date);
-
     @Override
     @Query("select u FROM UserEntity u "
             + " WHERE u.status = :status"

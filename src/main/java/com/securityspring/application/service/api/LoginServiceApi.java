@@ -115,11 +115,9 @@ public interface LoginServiceApi {
                                     final String sortBy,
                                     final String direction);
 
-    int deleteOldAccounts();
-
     void updateLastAccess(final String username);
 
-        int deactivateUsers();
+    int deactivateUsers();
 
     void createDefaultUsers();
 

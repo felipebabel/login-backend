@@ -550,11 +550,6 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
-    public int deleteOldAccounts() {
-        return this.userRepository.deleteOldAccounts(LocalDateTime.now().minusDays(60));
-    }
-
-    @Override
     public void updateLastAccess(final String username) {
         this.userRepository.updateLastAccess(username);
     }

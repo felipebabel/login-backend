@@ -39,7 +39,6 @@ public class AccountManagerScheduleTest {
         when(loginService.getUserByUsername("admin")).thenReturn(admin);
         when(logService.deleteOldLogs()).thenReturn(5);
         when(loginService.deactivateUsers()).thenReturn(2);
-        when(loginService.deleteOldAccounts()).thenReturn(1);
         when(emailServiceApi.deleteOldTokens()).thenReturn(3);
 
         accountManagerSchedule.runDailyDeletion();
@@ -49,7 +48,6 @@ public class AccountManagerScheduleTest {
         verify(logService, times(1)).setLog(any(), any(), contains("Total logs deleted"));
         verify(loginService).deactivateUsers();
         verify(logService, times(1)).setLog(any(), any(), contains("Account status update completed"));
-        verify(loginService).deleteOldAccounts();
         verify(logService, times(1)).setLog(any(), any(), contains("Account deletion completed"));
         verify(emailServiceApi).deleteOldTokens();
     }

@@ -26,8 +26,6 @@ public interface UserRepository extends EntityRepository<UserEntity, Long> {
                                          final Pageable pageable,
                                          final LocalDateTime date);
 
-    int deleteOldAccounts(final LocalDateTime dateTime);
-
     void updateLastAccess(final String username);
 
     int deactivateUsers(final LocalDateTime dateTime,
