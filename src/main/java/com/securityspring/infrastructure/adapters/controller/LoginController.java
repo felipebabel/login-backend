@@ -58,6 +58,17 @@ public class LoginController implements LoginApi {
     }
 
     @Override
+    @PostMapping("/create-account")
+    public ResponseEntity<Object> createAccount(@Valid @RequestBody final CreateAccountRequestDto createAccount,
+                                                final HttpServletRequest httpServletRequest) throws BadRequestException, MessagingException, UnsupportedEncodingException {
+        LOGGER.info("Creating account");
+        this.loginService.createAccount(createAccount, httpServletRequest);
+        return new ResponseEntity<>(DefaultResponse.builder().message("Account created successfully")
+                .status(DefaultResponse.SUCCESS)
+                .build(), HttpStatus.OK);
+    }
+
+    @Override
     @PostMapping("/send-email")
     public ResponseEntity<Object> sendEmail(@RequestParam("email") final String email,
                                             final HttpServletRequest httpServletRequest) throws MessagingException {
