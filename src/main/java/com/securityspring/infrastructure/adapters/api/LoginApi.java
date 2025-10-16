@@ -42,25 +42,6 @@ public interface LoginApi {
         ResponseEntity<Object> createAccount(@Valid @RequestBody final CreateAccountRequestDto createAccount,
                                              final HttpServletRequest httpServletRequest) throws BadRequestException, MessagingException, UnsupportedEncodingException;
 
-        @Operation(summary = "Update Account", description = "Updates user account information.")
-        @ApiResponses(value = {
-                @ApiResponse(responseCode = "200", description = "Account updated successfully",
-                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-                @ApiResponse(responseCode = "400", description = "Update failed due to invalid data or user not found")
-        })
-        ResponseEntity<Object> updateAccount(@RequestParam("user") final Long userIdentifier,
-                                             @Valid @RequestBody final UpdateAccountRequestDto createAccount,
-                                             final HttpServletRequest httpServletRequest) throws BadRequestException, MessagingException, UnsupportedEncodingException;
-
-        @Operation(summary = "Logout", description = "Logs out the specified user.")
-        @ApiResponses(value = {
-                @ApiResponse(responseCode = "200", description = "Logout successful",
-                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-                @ApiResponse(responseCode = "400", description = "Logout failed, user not found")
-        })
-        ResponseEntity<Object> logout(@RequestParam("user") Long userIdentifier,
-                                      final HttpServletRequest httpServletRequest) throws BadRequestException;
-
         @Operation(summary = "Send Email", description = "Sends a confirmation or reset email to the specified address.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Email sent successfully",

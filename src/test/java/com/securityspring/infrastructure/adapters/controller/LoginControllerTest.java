@@ -77,34 +77,6 @@ class LoginControllerTest {
     }
 
     @Test
-    @DisplayName("Should update account successfully")
-    void testUpdateAccount() throws BadRequestException, MessagingException, UnsupportedEncodingException {
-        UpdateAccountRequestDto updateDto = new UpdateAccountRequestDto();
-        Long userId = 1L;
-
-        ResponseEntity<Object> response = loginController.updateAccount(userId, updateDto, httpServletRequest);
-
-        assertNotNull(response);
-        DefaultResponse body = (DefaultResponse) response.getBody();
-        assertNotNull(body, "Response body should not be null");
-        assertEquals("Account updated successfully", body.getMessage());
-        assertEquals(DefaultResponse.SUCCESS, body.getStatus());
-        verify(loginService, times(1)).updateAccount(updateDto, userId, httpServletRequest);
-    }
-
-    @Test
-    @DisplayName("Should logout successfully")
-    void testLogout() {
-        Long userId = 1L;
-
-        ResponseEntity<Object> response = loginController.logout(userId, httpServletRequest);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(loginService, times(1)).logout(userId, httpServletRequest);
-    }
-
-    @Test
     @DisplayName("Should send email successfully")
     void testSendEmail() throws MessagingException {
         String email = "test@example.com";

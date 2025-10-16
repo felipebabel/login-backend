@@ -58,41 +58,6 @@ public class LoginController implements LoginApi {
     }
 
     @Override
-    @PostMapping("/create-account")
-    public ResponseEntity<Object> createAccount(@Valid @RequestBody final CreateAccountRequestDto createAccount,
-                                                final HttpServletRequest httpServletRequest) throws BadRequestException, MessagingException, UnsupportedEncodingException {
-        LOGGER.info("Creating account");
-        this.loginService.createAccount(createAccount, httpServletRequest);
-        return new ResponseEntity<>(DefaultResponse.builder().message("Account created successfully")
-                .status(DefaultResponse.SUCCESS)
-                .build(), HttpStatus.OK);
-    }
-
-    @Override
-    @PreAuthorize("hasRole('USER')")
-    @PutMapping("/update-account")
-    public ResponseEntity<Object> updateAccount(@RequestParam("user") final Long userIdentifier,
-                                                @Valid @RequestBody final UpdateAccountRequestDto account,
-                                                final HttpServletRequest httpServletRequest) throws BadRequestException, MessagingException, UnsupportedEncodingException {
-        LOGGER.info("Updating account");
-        this.loginService.updateAccount(account, userIdentifier, httpServletRequest);
-        return new ResponseEntity<>(DefaultResponse.builder().message("Account updated successfully")
-                .status(DefaultResponse.SUCCESS)
-                .build(), HttpStatus.OK);
-    }
-
-    @Override
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'ANALYST')")
-    @PutMapping("/logout")
-    public ResponseEntity<Object> logout(@RequestParam("user") final Long userIdentifier,
-                                         final HttpServletRequest httpServletRequest) {
-        LOGGER.info("User logging out");
-        this.loginService.logout(userIdentifier, httpServletRequest);
-        LOGGER.info("User logged out");
-        return ResponseEntity.noContent().build();
-    }
-
-    @Override
     @PostMapping("/send-email")
     public ResponseEntity<Object> sendEmail(@RequestParam("email") final String email,
                                             final HttpServletRequest httpServletRequest) throws MessagingException {
