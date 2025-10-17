@@ -13,6 +13,7 @@ import com.securityspring.infrastructure.adapters.api.LoginApi;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
+import com.securityspring.infrastructure.adapters.dto.ResetPasswordDto;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.vo.TokenVO;
 import com.securityspring.infrastructure.adapters.vo.UserVO;
@@ -92,13 +93,11 @@ public class LoginController implements LoginApi {
 
     @Override
     @PutMapping("/reset-password")
-    public ResponseEntity<Object> resetPassword(@RequestParam("newPassword") final String newPassword,
-                                               @RequestParam(value = "email", required = false) final String email,
-                                                @RequestParam(value = "user", required = false) final String user,
+    public ResponseEntity<Object> resetPassword(@RequestBody ResetPasswordDto dto,
                                                 final HttpServletRequest httpServletRequest) {
-        LOGGER.info("Resetting password for email {}, or user: {}", email, user);
-        this.loginService.resetPassword(newPassword, email, user, httpServletRequest);
-        LOGGER.info("Password reset for email {}, or user: {}", email, user);
+        LOGGER.info("Resetting password for email {}, or user: {}", dto.getEmail(), dto.getUser());
+        this.loginService.resetPassword(dto.getNewPassword(), dto.getEmail(), dto.getUser(), httpServletRequest);
+        LOGGER.info("Password reset for email {}, or user: {}", dto.getEmail(), dto.getUser());
         return ResponseEntity.noContent().build();
     }
 

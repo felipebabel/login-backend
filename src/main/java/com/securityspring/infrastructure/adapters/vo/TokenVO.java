@@ -17,4 +17,6 @@ public class TokenVO {
 
     private Long expiresIn;
 
+    private String role;
+
 }

@@ -9,6 +9,7 @@ import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
+import com.securityspring.infrastructure.adapters.dto.ResetPasswordDto;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -67,9 +68,7 @@ public interface LoginApi {
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
                 @ApiResponse(responseCode = "400", description = "Failed to reset password due to invalid data")
         })
-        ResponseEntity<Object> resetPassword(@RequestParam("newPassword") final String newPassword,
-                                             @RequestParam(value = "email", required = false) final String email,
-                                             @RequestParam(value = "user", required = false) final String user,
+        ResponseEntity<Object> resetPassword(@RequestBody ResetPasswordDto dto,
                                              final HttpServletRequest httpServletRequest) throws BadRequestException;
 
 }

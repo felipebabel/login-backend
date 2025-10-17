@@ -7,6 +7,7 @@ import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
 import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
+import com.securityspring.infrastructure.adapters.dto.ResetPasswordDto;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.vo.UserVO;
 import jakarta.mail.MessagingException;
@@ -108,13 +109,15 @@ class LoginControllerTest {
     @Test
     @DisplayName("Should reset password successfully")
     void testResetPassword() {
-        String email = "test@example.com";
-        String newPassword = "newPass123";
+        final ResetPasswordDto resetPasswordDto = ResetPasswordDto.builder()
+                .newPassword("newPass123")
+                .email("test@example.com").build();
 
-        ResponseEntity<Object> response = loginController.resetPassword(newPassword, email, null, httpServletRequest);
+        ResponseEntity<Object> response = loginController.resetPassword(resetPasswordDto, httpServletRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(loginService, times(1)).resetPassword(newPassword, email, null, httpServletRequest);
+        verify(loginService, times(1)).resetPassword(resetPasswordDto.getNewPassword(), resetPasswordDto.getEmail()
+                    , resetPasswordDto.getUser(), httpServletRequest);
     }
 }

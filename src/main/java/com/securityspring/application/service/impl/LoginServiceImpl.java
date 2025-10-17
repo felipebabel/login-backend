@@ -229,9 +229,7 @@ public class LoginServiceImpl implements LoginServiceApi {
                 throw new UserInactiveException("Your account is inactive.");
             }
         }
-        if (user.isForcePasswordChange()) {
-            throw new PasswordExpiredException("Password expired");
-        }
+
         Optional<ConfigEntity> config = this.configRepository.findByKey("passwordExpiryDays");
         long value = 90L;
         if (config.isPresent()) {
@@ -244,7 +242,9 @@ public class LoginServiceImpl implements LoginServiceApi {
         if (!passwordService.checkPassword(loginRequestDto.getPassword(), user.getPassword())) {
             handleInvalidPassword(user, httpServletRequest);
         }
-
+        if (user.isForcePasswordChange()) {
+            throw new PasswordExpiredException("Password expired");
+        }
         updateLoginAttempt(user, 0, "LOGIN ATTEMPT OK");
         updateLogin(user, 0);
         this.logService.setLog("LOGIN ACCOUNT", user.getIdentifier(), httpServletRequest);

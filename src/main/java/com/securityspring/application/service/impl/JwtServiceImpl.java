@@ -54,9 +54,9 @@ public class JwtServiceImpl implements JwtServiceApi {
     @Override
     public TokenVO generateToken(final UserVO userVO) {
         long accessTokenValidity = getAccessTokenValidity();
-
+        final String role = userVO.getRole().name();
         final String accessToken = Jwts.builder()
-                .claim("role", userVO.getRole().name())
+                .claim("role", role)
                 .setSubject(userVO.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenValidity))
@@ -69,6 +69,7 @@ public class JwtServiceImpl implements JwtServiceApi {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
         return TokenVO.builder().token(accessToken)
+                .role("ROLE_" + role)
                 .refreshToken(refreshToken)
                 .expiresIn(accessTokenValidity) .build();
     }
