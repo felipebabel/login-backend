@@ -197,6 +197,11 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
+    public Optional<UserEntity> findByEmail(final String email) {
+        return this.userRepository.findByEmail(email.trim());
+    }
+
+    @Override
     public UserVO login(final LoginRequestDto loginRequestDto,
                         final HttpServletRequest httpServletRequest) {
         String username = loginRequestDto.getUser().trim();
@@ -269,11 +274,15 @@ public class LoginServiceImpl implements LoginServiceApi {
         if (optionalUser.isPresent()) {
             throw new UserAlreadyExistsException("User already exists: User" + optionalUser.get().getUsername());
         }
+        final Optional<UserEntity> optionalEmail = this.findByEmail(createAccount.getEmail());
+        if (optionalEmail.isPresent()) {
+            throw new UserAlreadyExistsException("Email already exists");
+        }
         final String encryptedPassword = this.passwordService.encryptPassword(createAccount.getPassword());
         final UserEntity user = this.saveUser(encryptedPassword, createAccount.getUser(), createAccount.getEmail(),
                 createAccount.getName(), StatusEnum.PENDING, RolesUserEnum.USER, LanguagesEnum.fromString(createAccount.getLanguage()));
         this.logService.setLog("CREATED ACCOUNT", user.getIdentifier(), httpServletRequest);
-        this.emailService.sendEmail(user, httpServletRequest);
+        this.emailService.sendEmail(user, createAccount.getLanguage(), httpServletRequest);
         LOGGER.info("Account created successfully");
     }
 

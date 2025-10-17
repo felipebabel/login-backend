@@ -50,6 +50,7 @@ public interface LoginApi {
                 @ApiResponse(responseCode = "400", description = "Failed to send email")
         })
         ResponseEntity<Object> sendEmail(@RequestParam("email") String email,
+                                         @RequestParam(value = "lang", required = false, defaultValue = "en") final String lang,
                                          final HttpServletRequest httpServletRequest) throws MessagingException;
 
         @Operation(summary = "Validate Code", description = "Validates a confirmation or password reset code sent via email.")

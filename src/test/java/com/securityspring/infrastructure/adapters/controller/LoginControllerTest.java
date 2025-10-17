@@ -81,12 +81,12 @@ class LoginControllerTest {
     @DisplayName("Should send email successfully")
     void testSendEmail() throws MessagingException {
         String email = "test@example.com";
-
-        ResponseEntity<Object> response = loginController.sendEmail(email, httpServletRequest);
+        String lang = "en";
+        ResponseEntity<Object> response = loginController.sendEmail(email, lang, httpServletRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(emailService, times(1)).sendEmail(email, httpServletRequest);
+        verify(emailService, times(1)).sendEmail(email, lang, httpServletRequest);
     }
 
     @Test

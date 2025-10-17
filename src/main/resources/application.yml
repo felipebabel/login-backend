@@ -26,6 +26,8 @@ brevo:
 jwt:
   secret: ${JWT_SECRET}
 
+init-database: ${INIT_DATABASE:false}
+
 email-service:
   from: ${EMAIL_FROM}
 
@@ -34,5 +36,24 @@ front-end:
 
 swagger:
   api:
-    title: Login backend
-    description: This backend handles user login, registration, and token management. It securely encrypts user passwords using AES-256 encryption and ensures secure authentication and authorization through token-based mechanisms.
+    title: Login Backend API
+    description: >
+      This backend handles user authentication, account management, and role-based access control (RBAC).
+      It securely encrypts user passwords using Bcrypt and ensures authentication and authorization
+      through JWT and Refresh Tokens. The API provides endpoints for user registration, login,
+      password recovery, and administrative actions with full Swagger documentation for easy testing
+      and integration.
+    version: 1.0.0
+    contact:
+      name: Felipe Babel
+      url: "https://github.com/felipebabel/login-backend"
+      email: "babelfelipe@gmail.com"
+    tags:
+      - name: Authentication
+        description: "Endpoints for login, logout, and token management"
+      - name: Users
+        description: "Endpoints for account creation, profile management, and password recovery"
+      - name: Admin
+        description: "Administrative endpoints for managing users and system configuration"
+      - name: Logs
+        description: "Endpoints for retrieving activity logs and monitoring"

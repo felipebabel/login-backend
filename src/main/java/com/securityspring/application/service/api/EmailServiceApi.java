@@ -9,6 +9,7 @@ import com.securityspring.infrastructure.adapters.vo.UserVO;
 public interface EmailServiceApi {
 
     void sendEmail(final String to,
+                   final String lang,
                    final HttpServletRequest httpServletRequest) throws MessagingException;
 
     UserVO validateCode(final String code,
@@ -17,6 +18,7 @@ public interface EmailServiceApi {
 
 
     void sendEmail(final UserEntity userEntity,
+                   final String lang,
                    final HttpServletRequest httpServletRequest) throws MessagingException, UnsupportedEncodingException;
 
     int deleteOldTokens();

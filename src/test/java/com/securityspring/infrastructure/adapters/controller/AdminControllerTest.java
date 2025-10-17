@@ -4,10 +4,12 @@ import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
 import com.securityspring.domain.enums.RolesUserEnum;
 import com.securityspring.domain.exception.BadRequestException;
+import com.securityspring.infrastructure.adapters.dto.LogDto;
 import com.securityspring.infrastructure.adapters.dto.LoginAttemptsCountDTO;
 import com.securityspring.infrastructure.adapters.dto.NewUsersPerMonthDTO;
 import com.securityspring.infrastructure.adapters.vo.TotalAccountVO;
 import com.securityspring.infrastructure.adapters.vo.UserVO;
+import com.securityspring.infrastructure.config.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -196,4 +199,54 @@ class AdminControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(user, response.getBody());
     }
+
+    @Test
+    @DisplayName("Should get my logs successfully")
+    void testGetMyLogs() {
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getId()).thenReturn(1L);
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        LogDto logDto = new LogDto(
+                1L,
+                "LOGIN",
+                "User logged in",
+                "127.0.0.1",
+                LocalDateTime.now(),
+                1L,
+                "testuser",
+                "Chrome"
+        );
+
+        Page<LogDto> logsPage = new PageImpl<>(Collections.singletonList(logDto));
+        when(logService.getLogs(0, 10, "description", "asc", 1L, null, "testuser"))
+                .thenReturn(logsPage);
+
+        ResponseEntity<Object> response = adminController.getMyLogs(0, 10, "description", "asc", userDetails);
+
+        //Verify
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(logsPage, response.getBody());
+        verify(logService, times(1)).getLogs(0, 10, "description", "asc", 1L, null, "testuser");
+    }
+
+    @Test
+    @DisplayName("Should get own user data successfully")
+    void testGetMyUserData() {
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        UserVO userVO = new UserVO();
+        when(loginService.getUserByUsername("testuser")).thenReturn(userVO);
+        ResponseEntity<Object> response = adminController.getMyUserData(userDetails);
+
+        //Verify
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(userVO, response.getBody());
+        verify(loginService, times(1)).getUserByUsername("testuser");
+    }
+
+
 }

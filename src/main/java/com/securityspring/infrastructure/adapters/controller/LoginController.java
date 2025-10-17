@@ -72,9 +72,10 @@ public class LoginController implements LoginApi {
     @Override
     @PostMapping("/send-email")
     public ResponseEntity<Object> sendEmail(@RequestParam("email") final String email,
+                                            @RequestParam(value = "lang", required = false, defaultValue = "en") final String lang,
                                             final HttpServletRequest httpServletRequest) throws MessagingException {
         LOGGER.info("Sending email to {}", email);
-        this.emailService.sendEmail(email, httpServletRequest);
+        this.emailService.sendEmail(email, lang, httpServletRequest);
         LOGGER.info("Email sent to {}", email);
         return ResponseEntity.noContent().build();
     }

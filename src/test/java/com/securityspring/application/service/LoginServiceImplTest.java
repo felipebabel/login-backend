@@ -199,7 +199,7 @@ class LoginServiceImplTest {
 
         loginService.createAccount(dto, httpRequest);
 
-        verify(emailService).sendEmail(any(UserEntity.class), any(HttpServletRequest.class));
+        verify(emailService).sendEmail(any(UserEntity.class), anyString(), any(HttpServletRequest.class));
         verify(logService).setLog(eq("CREATED ACCOUNT"), eq(1L), eq(httpRequest));
     }
 

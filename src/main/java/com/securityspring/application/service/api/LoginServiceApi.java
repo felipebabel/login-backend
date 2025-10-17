@@ -42,6 +42,8 @@ public interface LoginServiceApi {
 
     Optional<UserEntity> findUser(final String user);
 
+    Optional<UserEntity> findByEmail(final String email);
+
     UserVO login(final LoginRequestDto userEntity,
                  final HttpServletRequest httpServletRequest);
 

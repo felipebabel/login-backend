@@ -61,7 +61,7 @@ class EmailServiceImplTest {
         when(userRepository.findByEmail("unknown@test.com")).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () ->
-                emailService.sendEmail("unknown@test.com", request)
+                emailService.sendEmail("unknown@test.com","en", request)
         );
 
         verify(userRepository).findByEmail("unknown@test.com");
@@ -75,7 +75,7 @@ class EmailServiceImplTest {
         when(projectProperties.getProperty("brevo.api-key")).thenReturn("dummyKey");
         when(projectProperties.getProperty("email-service.from")).thenReturn("noreply@test.com");
 
-        emailService.sendEmail(mockUser.getEmail(), request);
+        emailService.sendEmail(mockUser.getEmail(), "en", request);
 
         verify(passwordResetTokenRepository).save(any(PasswordResetTokenEntity.class));
         verify(logService).setLog(eq("EMAIL SENT"), contains(mockUser.getEmail()), eq(request));
@@ -139,7 +139,7 @@ class EmailServiceImplTest {
         when(projectProperties.getProperty("brevo.api-key")).thenReturn("dummyKey");
         when(projectProperties.getProperty("email-service.from")).thenReturn("noreply@test.com");
 
-        emailService.sendEmail(mockUser, request);
+        emailService.sendEmail(mockUser, "en", request);
 
         verify(passwordResetTokenRepository).save(any(PasswordResetTokenEntity.class));
         verify(logService).setLog(eq("EMAIL SENT"), contains(mockUser.getEmail()), eq(request));
