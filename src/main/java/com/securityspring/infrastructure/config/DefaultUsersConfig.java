@@ -30,17 +30,24 @@ public class DefaultUsersConfig {
 
     @Bean
     public CommandLineRunner createAdminUser() {
-        final boolean initDatabase = Boolean.parseBoolean(this.projectProperties.getProperty("init-database"));
+        final boolean simulateData = Boolean.parseBoolean(this.projectProperties.getProperty("simulate-data"));
+        final boolean createDefaultUsers = Boolean.parseBoolean(this.projectProperties.getProperty("create-default-users"));
+
         return args -> {
-            if (initDatabase) {
+            if (createDefaultUsers) {
                 this.loginService.createDefaultUsers();
-                final ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-                populator.addScript(new ClassPathResource("db-init/login_user.sql"));
-                populator.addScript(new ClassPathResource("db-init/login_logs.sql"));
-                populator.execute(dataSource);
-                LOGGER.info("Default users and data created.");
+                LOGGER.info("Default users created.");
             } else {
-                LOGGER.info("Creation of default users and data skipped.");
+                LOGGER.info("Creation of default users skipped.");
+            }
+            if (simulateData) {
+                final ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+                populator.addScript(new ClassPathResource("db-init/2createLoginUser.sql"));
+                populator.addScript(new ClassPathResource("db-init/3createLoginLogs.sql"));
+                populator.execute(dataSource);
+                LOGGER.info("Fake data created.");
+            } else {
+                LOGGER.info("Creation of fake data skipped.");
             }
         };
     }

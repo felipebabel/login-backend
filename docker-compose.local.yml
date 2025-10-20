@@ -8,8 +8,6 @@ services:
       POSTGRES_DB: login_project
     ports:
       - "5432:5432"
-    volumes:
-      - ./src/main/resources/db-init:/docker-entrypoint-initdb.d
 
   login-backend:
     build: .
@@ -25,6 +23,7 @@ services:
       FRONT_END_URL: http://localhost:5173
       JWT_SECRET: 1
       BREVO_API: 1
-      INIT_DATABASE: false
+      CREATE_DEFAULT_USERS: true
+      SIMULATE_DATA: true
     depends_on:
       - postgres_db

@@ -66,12 +66,14 @@ public class UserEntity {
     @Column(name = "NR_LOGIN_ATTEMPT", nullable = false)
     private int loginAttempt;
 
-    @Column(name = "IE_FORCE_PASSWORD_CHANGE", nullable = false)
-    private boolean forcePasswordChange;
+    @Builder.Default
+    @Column(name = "IE_FORCE_PASSWORD_CHANGE")
+    private boolean forcePasswordChange = false;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(name = "DS_ROLE", nullable = false)
-    private RolesUserEnum role;
+    @Column(name = "DS_ROLE")
+    private RolesUserEnum role = RolesUserEnum.USER;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "DS_LANGUAGE")

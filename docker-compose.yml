@@ -13,6 +13,7 @@ services:
       JWT_SECRET: 1
       BREVO_API: 1
       FRONT_END_URL: http://localhost:5173
-      INIT_DATABASE: false
+      CREATE_DEFAULT_USERS: false
+      SIMULATE_DATA: false
     depends_on:
       - postgres_db

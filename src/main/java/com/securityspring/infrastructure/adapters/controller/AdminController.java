@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -77,24 +76,6 @@ public class AdminController implements AdminApi {
                 ? "Get pending account returned no content"
                 : "Get pending account successful");
         return new ResponseEntity<>(users, HttpStatus.OK);
-    }
-
-    @GetMapping("my-logs")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Object> getMyLogs(@RequestParam(defaultValue = "0") int page,
-                                            @RequestParam(defaultValue = "10") int size,
-                                            @RequestParam(defaultValue = "description") String sortBy,
-                                            @RequestParam(defaultValue = "asc") String direction,
-                                            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        final Page<LogDto> logs = logService.getLogs(
-                page, size, sortBy, direction,
-                userDetails.getId(),
-                null,
-                userDetails.getUsername()
-        );
-        LOGGER.info(logs.isEmpty() ? "Get my logs returned no content" : "Get my logs successful");
-        return new ResponseEntity<>(logs, HttpStatus.OK);
     }
 
     @Override
@@ -201,16 +182,6 @@ public class AdminController implements AdminApi {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("delete-user")
-    public ResponseEntity<Object> deleteUser(@RequestParam("user") Long userIdentifier,
-                                             final HttpServletRequest httpServletRequest) {
-        this.loginService.deleteUser(userIdentifier, httpServletRequest);
-        LOGGER.info("User deleted successful");
-        return ResponseEntity.noContent().build();
-    }
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("inactive-user")
     public ResponseEntity<Object> inactiveUser(@RequestParam("user") Long userIdentifier,
                                                final HttpServletRequest httpServletRequest) {
@@ -246,16 +217,6 @@ public class AdminController implements AdminApi {
         }
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
-
-    @Override
-    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN', 'USER')")
-    @GetMapping("/get-my-user-data")
-    public ResponseEntity<Object> getMyUserData(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        UserVO user = loginService.getUserByUsername(userDetails.getUsername());
-        LOGGER.info("Get own user data successfully for username: {}", userDetails.getUsername());
-        return new ResponseEntity<>(user, HttpStatus.OK);
-    }
-
 
     @Override
     @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")

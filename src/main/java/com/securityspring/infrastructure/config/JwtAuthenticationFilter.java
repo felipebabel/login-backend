@@ -1,6 +1,7 @@
 package com.securityspring.infrastructure.config;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -52,8 +53,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String path = request.getRequestURI();
-        if (path.startsWith("/api/v1/login") || path.startsWith("/api/v1/auth")) {
+        final String path = request.getRequestURI();
+        if (path.startsWith("/api/v1/login") ||
+                path.startsWith("/api/v1/auth") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/swagger-ui.html") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-resources") ||
+                path.startsWith("/webjars") ||
+                path.startsWith("/actuator/health") ||
+                path.startsWith("/actuator/info")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -100,7 +109,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
                                     null,
-                                    userDetails.getAuthorities()
+                                    List.of(authority)
                             );
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

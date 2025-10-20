@@ -21,8 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -100,16 +98,6 @@ class AdminControllerTest {
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(user, response.getBody());
-    }
-
-    @Test
-    @DisplayName("Should delete user successfully")
-    void testDeleteUser() {
-        ResponseEntity<Object> response = adminController.deleteUser(1L, httpServletRequest);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(loginService, times(1)).deleteUser(1L, httpServletRequest);
     }
 
     @Test
@@ -199,54 +187,5 @@ class AdminControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(user, response.getBody());
     }
-
-    @Test
-    @DisplayName("Should get my logs successfully")
-    void testGetMyLogs() {
-        CustomUserDetails userDetails = mock(CustomUserDetails.class);
-        when(userDetails.getId()).thenReturn(1L);
-        when(userDetails.getUsername()).thenReturn("testuser");
-
-        LogDto logDto = new LogDto(
-                1L,
-                "LOGIN",
-                "User logged in",
-                "127.0.0.1",
-                LocalDateTime.now(),
-                1L,
-                "testuser",
-                "Chrome"
-        );
-
-        Page<LogDto> logsPage = new PageImpl<>(Collections.singletonList(logDto));
-        when(logService.getLogs(0, 10, "description", "asc", 1L, null, "testuser"))
-                .thenReturn(logsPage);
-
-        ResponseEntity<Object> response = adminController.getMyLogs(0, 10, "description", "asc", userDetails);
-
-        //Verify
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(logsPage, response.getBody());
-        verify(logService, times(1)).getLogs(0, 10, "description", "asc", 1L, null, "testuser");
-    }
-
-    @Test
-    @DisplayName("Should get own user data successfully")
-    void testGetMyUserData() {
-        CustomUserDetails userDetails = mock(CustomUserDetails.class);
-        when(userDetails.getUsername()).thenReturn("testuser");
-
-        UserVO userVO = new UserVO();
-        when(loginService.getUserByUsername("testuser")).thenReturn(userVO);
-        ResponseEntity<Object> response = adminController.getMyUserData(userDetails);
-
-        //Verify
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userVO, response.getBody());
-        verify(loginService, times(1)).getUserByUsername("testuser");
-    }
-
 
 }

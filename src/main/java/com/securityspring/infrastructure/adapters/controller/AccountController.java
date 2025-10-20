@@ -4,25 +4,24 @@ import java.io.UnsupportedEncodingException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import com.securityspring.application.service.api.EmailServiceApi;
-import com.securityspring.application.service.api.JwtServiceApi;
+import com.securityspring.application.service.api.LogServiceApi;
 import com.securityspring.application.service.api.LoginServiceApi;
-import com.securityspring.domain.enums.StatusEnum;
 import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.infrastructure.adapters.api.AccountApi;
-import com.securityspring.infrastructure.adapters.api.LoginApi;
-import com.securityspring.infrastructure.adapters.dto.CreateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
-import com.securityspring.infrastructure.adapters.dto.LoginRequestDto;
+import com.securityspring.infrastructure.adapters.dto.LogDto;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
-import com.securityspring.infrastructure.adapters.vo.TokenVO;
 import com.securityspring.infrastructure.adapters.vo.UserVO;
+import com.securityspring.infrastructure.config.CustomUserDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,12 +32,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/account")
 public class AccountController implements AccountApi {
 
-    private final LoginServiceApi loginService;
+    private final LogServiceApi logService;
 
+    private final LoginServiceApi loginService;
 
     static final Logger LOGGER = LoggerFactory.getLogger(AccountController.class);
 
-    public AccountController(LoginServiceApi loginService) {
+    public AccountController(final LogServiceApi logService,
+                             final LoginServiceApi loginService) {
+        this.logService = logService;
         this.loginService = loginService;
     }
 
@@ -66,5 +68,43 @@ public class AccountController implements AccountApi {
         this.loginService.logout(userIdentifier, httpServletRequest);
         LOGGER.info("User logged out");
         return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("delete-user")
+    public ResponseEntity<Object> deleteUser(@RequestParam("user") Long userIdentifier,
+                                             final HttpServletRequest httpServletRequest) {
+        this.loginService.deleteUser(userIdentifier, httpServletRequest);
+        LOGGER.info("User deleted successful");
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @GetMapping("my-logs")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Object> getMyLogs(@RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "10") int size,
+                                            @RequestParam(defaultValue = "description") String sortBy,
+                                            @RequestParam(defaultValue = "asc") String direction,
+                                            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        final Page<LogDto> logs = logService.getLogs(
+                page, size, sortBy, direction,
+                userDetails.getId(),
+                null,
+                userDetails.getUsername()
+        );
+        LOGGER.info(logs.isEmpty() ? "Get my logs returned no content" : "Get my logs successful");
+        return new ResponseEntity<>(logs, HttpStatus.OK);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'ADMIN', 'USER')")
+    @GetMapping("/get-my-user-data")
+    public ResponseEntity<Object> getMyUserData(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        UserVO user = loginService.getUserByUsername(userDetails.getUsername());
+        LOGGER.info("Get own user data successfully for username: {}", userDetails.getUsername());
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 }

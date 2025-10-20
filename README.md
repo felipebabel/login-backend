@@ -98,16 +98,8 @@ Before running the application, make sure to update the values in application.ym
 Swagger UI is available at:
 
 ```
-http://localhost:8080/swagger-ui.html
+http://localhost:8080/swagger-ui/index.html
 ```
-
-You can test all endpoints including:
-
-* `/api/v1/auth/login` → Login with username and password
-* `/api/v1/auth/register` → Create a new account
-* `/api/v1/auth/validate-code` → Validate activation or password recovery codes
-* `/api/v1/users` → Admin/Analyst endpoints for account management
-* `/api/v1/logs` → View system logs (Admin only)
 
 ---
 

@@ -50,22 +50,6 @@ public interface AdminApi {
             @Parameter(description = "Action type to filter logs") @RequestParam String action
     ) throws BadRequestException;
 
-    @Operation(
-            summary = "Get My Logs",
-            description = "Returns a paginated list of logs for the authenticated user. Only accessible by users with USER role."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User logs retrieved successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-            @ApiResponse(responseCode = "403", description = "Access denied")
-    })
-    ResponseEntity<Object> getMyLogs(@RequestParam(defaultValue = "0") int page,
-                                            @RequestParam(defaultValue = "10") int size,
-                                            @RequestParam(defaultValue = "description") String sortBy,
-                                            @RequestParam(defaultValue = "asc") String direction,
-                                            @AuthenticationPrincipal CustomUserDetails userDetails
-    );
-
     @Operation(summary = "Get Users",
             description = "Returns a paginated list of users with optional filtering by identifier, username, or name.")
     @ApiResponses(value = {
@@ -216,19 +200,6 @@ public interface AdminApi {
             @RequestParam(value = "name", required = false) String name
     ) throws BadRequestException;
 
-    @Operation(
-            summary = "Get Own User Data",
-            description = "Retrieves the data of the currently authenticated user. " +
-                    "No parameters are required; the endpoint uses the authenticated user's credentials."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User data retrieved successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - user is not authenticated"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - user does not have the required role")
-    })
-    ResponseEntity<Object> getMyUserData(@AuthenticationPrincipal CustomUserDetails userDetails);
-
     @Operation(summary = "Block User Account",
             description = "Blocks a user account by identifier.")
     @ApiResponses(value = {
@@ -250,18 +221,6 @@ public interface AdminApi {
     })
     ResponseEntity<Object> activeUser(
             @Parameter(description = "User identifier to activate", example = "123") @RequestParam("user") Long user,
-            final HttpServletRequest httpServletRequest
-    ) throws BadRequestException;
-
-    @Operation(summary = "Delete User Account",
-            description = "Deletes a user account by identifier.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User account deleted successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid user identifier")
-    })
-    ResponseEntity<Object> deleteUser(
-            @Parameter(description = "User identifier to delete", example = "123") @RequestParam("user") Long user,
             final HttpServletRequest httpServletRequest
     ) throws BadRequestException;
 }
