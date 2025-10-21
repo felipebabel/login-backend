@@ -30,7 +30,6 @@ public interface LoginApi {
                 @ApiResponse(responseCode = "400", description = "Invalid password"),
                 @ApiResponse(responseCode = "404", description = "User not found")
         })
-        @PostMapping("/login")
         ResponseEntity<Object> login(@Valid @RequestBody final LoginRequestDto loginRequest,
                                      final HttpServletRequest httpServletRequest) throws BadRequestException, InterruptedException;
 

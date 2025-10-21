@@ -26,13 +26,26 @@ brevo:
 jwt:
   secret: ${JWT_SECRET}
 
-init-database: ${INIT_DATABASE:false}
+create-default-users: ${CREATE_DEFAULT_USERS:false}
+
+simulate-data: ${SIMULATE_DATA:false}
 
 email-service:
   from: ${EMAIL_FROM}
 
 front-end:
   url: ${FRONT_END_URL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+  security:
+    enabled: false
 
 swagger:
   api:

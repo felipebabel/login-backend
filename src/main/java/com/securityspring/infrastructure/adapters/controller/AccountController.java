@@ -10,6 +10,7 @@ import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.infrastructure.adapters.api.AccountApi;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
 import com.securityspring.infrastructure.adapters.dto.LogDto;
+import com.securityspring.infrastructure.adapters.dto.ResetPasswordDto;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
 import com.securityspring.infrastructure.adapters.vo.UserVO;
 import com.securityspring.infrastructure.config.CustomUserDetails;
@@ -106,5 +107,16 @@ public class AccountController implements AccountApi {
         UserVO user = loginService.getUserByUsername(userDetails.getUsername());
         LOGGER.info("Get own user data successfully for username: {}", userDetails.getUsername());
         return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyRole('ANALYST', 'USER')")
+    @PutMapping("/reset-password")
+    public ResponseEntity<Object> resetPassword(@RequestBody ResetPasswordDto dto,
+                                                final HttpServletRequest httpServletRequest) {
+        LOGGER.info("Resetting password for email {}, or user: {}", dto.getEmail(), dto.getUser());
+        this.loginService.resetPassword(dto.getNewPassword(), dto.getEmail(), dto.getUser(), httpServletRequest);
+        LOGGER.info("Password reset for email {}, or user: {}", dto.getEmail(), dto.getUser());
+        return ResponseEntity.noContent().build();
     }
 }
