@@ -14,6 +14,6 @@ services:
       BREVO_API: 1
       FRONT_END_URL: http://localhost:5173
       CREATE_DEFAULT_USERS: false
-      SIMULATE_DATA: false
+      SIMULATE_DATA: falseds
     depends_on:
       - postgres_db
