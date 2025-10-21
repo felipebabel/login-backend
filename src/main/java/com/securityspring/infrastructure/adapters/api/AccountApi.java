@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import com.securityspring.domain.exception.BadRequestException;
 import com.securityspring.infrastructure.adapters.dto.DefaultResponse;
+import com.securityspring.infrastructure.adapters.dto.ResetPasswordDto;
 import com.securityspring.infrastructure.adapters.dto.UpdateAccountRequestDto;
 import com.securityspring.infrastructure.config.CustomUserDetails;
 import org.springframework.http.ResponseEntity;
@@ -80,5 +81,15 @@ public interface AccountApi {
             @ApiResponse(responseCode = "403", description = "Forbidden - user does not have the required role")
     })
     ResponseEntity<Object> getMyUserData(@AuthenticationPrincipal CustomUserDetails userDetails);
+
+
+    @Operation(summary = "Reset Password", description = "Resets the user password using email or user identifier.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Password reset successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DefaultResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Failed to reset password due to invalid data")
+    })
+    ResponseEntity<Object> resetPassword(@RequestBody ResetPasswordDto dto,
+                                         final HttpServletRequest httpServletRequest) throws BadRequestException;
 
 }
