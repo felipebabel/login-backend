@@ -629,6 +629,7 @@ public class LoginServiceImpl implements LoginServiceApi {
         userEntity.setPassword(encryptedPassword);
         userEntity.setPasswordChangeDate(LocalDateTime.now());
         userEntity.setForcePasswordChange(false);
+        userEntity.setStatus(StatusEnum.ACTIVE);
         this.userRepository.save(userEntity);
         this.logService.setLog("PASSWORD RESET", userEntity.getIdentifier(), "Password reset successfully.");
     }
