@@ -83,7 +83,7 @@ public class AccountController implements AccountApi {
 
     @Override
     @GetMapping("my-logs")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('ANALYST', 'USER')")
     public ResponseEntity<Object> getMyLogs(@RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "10") int size,
                                             @RequestParam(defaultValue = "description") String sortBy,
