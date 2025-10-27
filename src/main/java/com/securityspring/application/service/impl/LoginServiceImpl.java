@@ -351,6 +351,7 @@ public class LoginServiceImpl implements LoginServiceApi {
         final Optional<UserEntity> userEntity = this.userRepository.findByIdentifier(user);
         if (userEntity.isPresent()) {
             userEntity.get().setStatus(StatusEnum.ACTIVE);
+            userEntity.get().setLoginAttempt(0);
             this.userRepository.save(userEntity.get());
             LOGGER.info("User activated: Id: {}", userEntity.get().getIdentifier());
             this.logService.setLog("ACTIVATED ACCOUNT", user, httpServletRequest);
