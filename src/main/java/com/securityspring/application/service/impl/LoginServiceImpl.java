@@ -133,9 +133,6 @@ public class LoginServiceImpl implements LoginServiceApi {
         userEntity.setCreationUserDate(LocalDateTime.now());
         userEntity.setLoginAttempt(0);
         userEntity.setRole(role);
-        if (user.equalsIgnoreCase("user")) {
-            userEntity.setPasswordChangeDate(LocalDateTime.now().minusDays(89));
-        }
         this.userRepository.save(userEntity);
         LOGGER.info("User saved: Id: {}", userEntity.getIdentifier());
         return userEntity;
